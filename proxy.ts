@@ -282,6 +282,13 @@ export function proxy(req: NextRequest) {
 
     // Role check: If admin user accesses client workspace, redirect to admin portal
     if (userRole === "admin") {
+      // On one host /…/app/<section> is also the admin workbench's own URL (the
+      // page picks the workbench by role, and the admin sidebar links there), so
+      // only the bare workspace root sends an admin home — redirecting every
+      // section made each sidebar click land back on the same page.
+      if (SINGLE_DOMAIN && !/^\/((en|bn)\/)?app\/?$/.test(url.pathname)) {
+        return NextResponse.next();
+      }
       return NextResponse.redirect(new URL(`${workspaceOrigin("admin")}/en/app/tenant-admin`));
     }
 
