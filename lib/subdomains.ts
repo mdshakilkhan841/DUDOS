@@ -5,9 +5,15 @@
  * - Customer Workspace: app.<domain> (e.g. app.localhost:3000, app.dudos.com, app.dudos.daffodilweb.com)
  * - Admin Panel: admin.<domain> (e.g. admin.localhost:3000, admin.dudos.com, admin.dudos.daffodilweb.com)
  * - Main Marketing/Landing: <domain> (e.g. localhost:3000, dudos.com, dudos.daffodilweb.com)
+ *
+ * Single-domain mode (NEXT_PUBLIC_SINGLE_DOMAIN=true) serves all three from one host,
+ * for deployments with no app./admin. DNS records: the workspace at /en/app and the
+ * admin panel at /en/app/tenant-admin. proxy.ts guards those paths instead of hosts.
  */
 
 export type SubdomainType = "app" | "admin" | "main";
+
+export const SINGLE_DOMAIN = process.env.NEXT_PUBLIC_SINGLE_DOMAIN === "true";
 
 export function getBaseDomain(hostname: string): { subdomain: string | null; rootDomain: string; isLocalhost: boolean } {
   const hostWithoutPort = hostname.split(":")[0].toLowerCase();
@@ -61,6 +67,10 @@ export function buildSubdomainUrl(
 
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
 
+  if (SINGLE_DOMAIN) {
+    return `${protocol}//${host}${cleanPath}`;
+  }
+
   if (isLocalhost) {
     if (subdomain === "main") {
       return `${protocol}//localhost${port}${cleanPath}`;
@@ -79,6 +89,8 @@ export function buildSubdomainUrl(
 export function getCookieDomain(hostname?: string): string | undefined {
   const host = hostname || (typeof window !== "undefined" ? window.location.hostname : "");
   if (!host) return undefined;
+  // One host: nothing to share the session with, so keep cookies host-only.
+  if (SINGLE_DOMAIN) return undefined;
   const hostWithoutPort = host.split(":")[0].toLowerCase();
   
   if (hostWithoutPort === "localhost" || hostWithoutPort.endsWith(".localhost") || hostWithoutPort === "127.0.0.1") {
