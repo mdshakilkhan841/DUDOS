@@ -17,6 +17,7 @@ import {
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { getAuthToken } from "@/lib/dudos/assessment-sync";
 import { AdminBuilderPanel, builderBadge, type BuilderState } from "./AdminBuilderPanel";
+import { AdminProjectFiles } from "./AdminProjectFiles";
 import { showToast } from "@/lib/toast";
 
 const API_BASE =
@@ -483,6 +484,8 @@ export function AdminProjectTracking() {
                                     </div>
                                 )}
                             </dl>
+
+                            <AdminProjectFiles key={editing.id} projectId={editing.id} />
 
                             {handedOff && (
                                 <AdminBuilderPanel<AdminProject>

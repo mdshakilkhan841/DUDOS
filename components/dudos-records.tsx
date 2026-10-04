@@ -6,6 +6,7 @@ import {
 } from "@/lib/dudos/workspace-preference";
 import React, { useEffect, useState } from "react";
 import { SendRequest } from "./dudos-requests";
+import { AssessmentFiles } from "./projects/AssessmentFiles";
 import { DevscopeProject, DEVSCOPE_KIND } from "./dudos-devscope";
 import { RecordComments } from "./dudos-comments";
 import { nextStates, operationalKinds } from "@/lib/dudos/workflow";
@@ -19,7 +20,6 @@ import {
     Plus,
     Upload,
     FileText,
-    ArrowUpRight,
     RefreshCw,
     Lock,
 } from "lucide-react";
@@ -1052,17 +1052,13 @@ function Wizard({
                             />
                         )}
                         {step === 3 && (
-                            <p>
-                                <Link
-                                    className="text-link"
-                                    href={`/${lang}/app/assets`}
-                                >
-                                    {lang === "bn"
-                                        ? "ব্যক্তিগত উৎস ফাইল আপলোড করুন"
-                                        : "Upload private source files"}
-                                    <ArrowUpRight size={16} />
-                                </Link>
-                            </p>
+                            <AssessmentFiles
+                                recordId={saved?.id}
+                                ensureRecordId={async () =>
+                                    saved?.id || (await save())?.id || null
+                                }
+                                lang={lang}
+                            />
                         )}
                         {step === 3 && (
                             <Notice>
