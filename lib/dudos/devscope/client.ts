@@ -16,7 +16,9 @@ type Env={
 const config=()=>{
  const e=process.env as unknown as Env;
  const baseUrl=(e.DEVSCOPE_BASE_URL||'http://127.0.0.1:8000').trim().replace(/\/+$/,'');
- const token=(e.DEVSCOPE_SERVICE_TOKEN||'dudos_devscope_sec_2026_tok').trim();
+ // No fallback: the builder checks this against its DUDOS_SERVICE_TOKEN, so unset
+ // must read as "not configured" (isConfigured), never as a token in the source.
+ const token=(e.DEVSCOPE_SERVICE_TOKEN||'').trim();
  // Clamped: a mis-set value must not hold a Worker request open indefinitely,
  // nor abort before DevScope can accept a large SRS.
  const timeout=Math.min(120000,Math.max(3000,Number(e.DEVSCOPE_REQUEST_TIMEOUT)||30000));

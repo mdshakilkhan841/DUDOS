@@ -961,7 +961,7 @@ export function CustomerUserPanel({
             const token = getAuthToken();
             if (token) {
                 // Fetch active draft from PostgreSQL
-                fetch("http://localhost:8000/api/v1/onboarding/active-draft", {
+                fetch(`${API_BASE}/onboarding/active-draft`, {
                     headers: { Authorization: `Bearer ${token}` },
                 })
                     .then((res) => (res.ok ? res.json() : null))
@@ -1023,7 +1023,7 @@ export function CustomerUserPanel({
                     .catch(() => {});
 
                 // Fetch official projects from PostgreSQL
-                fetch("http://localhost:8000/api/v1/projects", {
+                fetch(`${API_BASE}/projects`, {
                     headers: { Authorization: `Bearer ${token}` },
                 })
                     .then((res) => (res.ok ? res.json() : []))
@@ -1170,7 +1170,7 @@ export function CustomerUserPanel({
                     });
 
                 // 7. Load deployments from FastAPI backend
-                fetch("http://localhost:8000/api/v1/deployments/my", {
+                fetch(`${API_BASE}/deployments/my`, {
                     headers: { Authorization: `Bearer ${token}` },
                 })
                     .then((res) => res.json())
@@ -1435,7 +1435,7 @@ export function CustomerUserPanel({
         // Persist QA update to PostgreSQL
         const token = getAuthToken();
         if (token) {
-            fetch("http://localhost:8000/api/v1/onboarding/active-draft", {
+            fetch(`${API_BASE}/onboarding/active-draft`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -1538,7 +1538,7 @@ export function CustomerUserPanel({
         // Persist to FastAPI PostgreSQL Database
         const token = getAuthToken();
         if (token) {
-            fetch("http://localhost:8000/api/v1/onboarding/active-draft", {
+            fetch(`${API_BASE}/onboarding/active-draft`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -1552,7 +1552,7 @@ export function CustomerUserPanel({
                 ),
             );
 
-            fetch("http://localhost:8000/api/v1/onboarding/draft", {
+            fetch(`${API_BASE}/onboarding/draft`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -1647,7 +1647,7 @@ export function CustomerUserPanel({
         const token = getAuthToken();
         if (token) {
             // 1. Update active draft status in PostgreSQL
-            fetch("http://localhost:8000/api/v1/onboarding/active-draft", {
+            fetch(`${API_BASE}/onboarding/active-draft`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -1666,7 +1666,7 @@ export function CustomerUserPanel({
             );
 
             // 2. Persist project in customer_projects PostgreSQL table
-            fetch("http://localhost:8000/api/v1/projects/from-draft", {
+            fetch(`${API_BASE}/projects/from-draft`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

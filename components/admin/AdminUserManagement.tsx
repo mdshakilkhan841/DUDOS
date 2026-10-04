@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { showToast } from "@/lib/toast";
+import { authHeaders } from "@/lib/dudos/packages";
 
 const STATUSES: UserStatus[] = [
     "pending_review",
@@ -113,6 +114,7 @@ export function AdminUserManagement({
                 process.env.NEXT_PUBLIC_API_BASE_URL ||
                 "http://localhost:8000/api/v1";
             const response = await fetch(`${apiBase}/admin/test-data`, {
+                headers: authHeaders(),
                 method: "DELETE",
             });
             const data = await response.json();
@@ -148,6 +150,7 @@ export function AdminUserManagement({
                 process.env.NEXT_PUBLIC_API_BASE_URL ||
                 "http://localhost:8000/api/v1";
             const response = await fetch(`${apiBase}/admin/users/${user.id}`, {
+                headers: authHeaders(),
                 method: "DELETE",
             });
             if (!response.ok) throw new Error("Delete request failed");

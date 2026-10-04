@@ -1,3 +1,6 @@
+// Not imported from ./packages: that module imports this one.
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1";
+
 function safeJsonParse<T = any>(
     val: string | null | undefined,
     fallback: T | null = null,
@@ -446,7 +449,7 @@ export async function syncAssessmentToWorkspaceDraft(
         if (token && (isSubmitted || draftRecord.status === "submitted")) {
             try {
                 const projRes = await fetch(
-                    "http://localhost:8000/api/v1/projects/from-draft",
+                    `${API_BASE}/projects/from-draft`,
                     {
                         method: "POST",
                         headers: {
@@ -529,7 +532,7 @@ export async function syncAssessmentToWorkspaceDraft(
         // 4. Persist onboarding & active draft snapshots in PostgreSQL
         if (token) {
             // a. Save to customer_onboarding_drafts table
-            fetch("http://localhost:8000/api/v1/onboarding/draft", {
+            fetch(`${API_BASE}/onboarding/draft`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -558,7 +561,7 @@ export async function syncAssessmentToWorkspaceDraft(
             );
 
             // b. Save to customer_active_drafts table
-            fetch("http://localhost:8000/api/v1/onboarding/active-draft", {
+            fetch(`${API_BASE}/onboarding/active-draft`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

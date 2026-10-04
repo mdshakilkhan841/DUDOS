@@ -10,6 +10,7 @@ import {
   ProjectIntakeData,
 } from "@/types/auth";
 import { showToast } from "@/lib/toast";
+import { authHeaders } from "@/lib/dudos/packages";
 import { getCookieDomain, safeJsonParse } from "@/lib/subdomains";
 
 export interface CreditTransaction {
@@ -222,7 +223,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Clean load of registrations directly from PostgreSQL
       const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1";
-      fetch(`${apiBase}/admin/users`)
+      fetch(`${apiBase}/admin/users`, { headers: authHeaders() })
         .then((res) => res.json())
         .then((data) => {
           if (data?.users && Array.isArray(data.users)) {
@@ -423,7 +424,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshUsers = async () => {
     try {
       const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1";
-      const res = await fetch(`${apiBase}/admin/users`);
+      const res = await fetch(`${apiBase}/admin/users`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         if (data?.users && Array.isArray(data.users)) {
@@ -446,7 +447,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1";
       fetch(`${apiBase}/admin/users/${userId}/status`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders(true),
         body: JSON.stringify({ status: newStatus }),
       }).catch(() => {});
     } catch {}
@@ -493,7 +494,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1";
       fetch(`${apiBase}/admin/users/${userId}/credits`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders(true),
         body: JSON.stringify({ amount, reason }),
       }).catch(() => {});
     } catch {}

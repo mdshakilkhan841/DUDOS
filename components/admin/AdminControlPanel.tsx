@@ -47,6 +47,9 @@ import { AdminSupportTickets } from "./AdminSupportTickets";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { showToast } from "@/lib/toast";
 import { getAuthToken } from "@/lib/dudos/assessment-sync";
+import { authHeaders } from "@/lib/dudos/packages";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1";
 
 export function AdminControlPanel({
   lang = "en",
@@ -85,7 +88,7 @@ export function AdminControlPanel({
   const [creditReason, setCreditReason] = useState<string>("Manual tech admin allocation");
 
   const loadDeploymentTickets = () => {
-    fetch("http://localhost:8000/api/v1/admin/deployments")
+    fetch(`${API_BASE}/admin/deployments`, { headers: authHeaders() })
       .then((res) => res.json())
       .then((data) => {
         if (data.tickets && Array.isArray(data.tickets)) {
@@ -196,9 +199,9 @@ export function AdminControlPanel({
       setDeploymentTickets(updated);
       localStorage.setItem("dudos_deployment_tickets", JSON.stringify(updated));
 
-      fetch(`http://localhost:8000/api/v1/admin/deployments/${ticketId}`, {
+      fetch(`${API_BASE}/admin/deployments/${ticketId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders(true),
         body: JSON.stringify({ dnsStatus: "verified" }),
       }).catch(console.error);
 
@@ -218,9 +221,9 @@ export function AdminControlPanel({
       localStorage.setItem("dudos_deployment_tickets", JSON.stringify(updated));
       setEditingIpTicketId(null);
 
-      fetch(`http://localhost:8000/api/v1/admin/deployments/${ticketId}`, {
+      fetch(`${API_BASE}/admin/deployments/${ticketId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders(true),
         body: JSON.stringify({ assignedIp: ip.trim() }),
       }).catch(console.error);
 
@@ -251,9 +254,9 @@ export function AdminControlPanel({
       setDeploymentTickets(updated);
       localStorage.setItem("dudos_deployment_tickets", JSON.stringify(updated));
 
-      fetch(`http://localhost:8000/api/v1/admin/deployments/${ticket.id}`, {
+      fetch(`${API_BASE}/admin/deployments/${ticket.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders(true),
         body: JSON.stringify({
           status: "live",
           dnsStatus: "verified",
@@ -672,8 +675,9 @@ export function AdminControlPanel({
                                   return;
                                 }
                                 try {
-                                  const res = await fetch(`http://localhost:8000/api/v1/admin/users/${client.id}`, {
+                                  const res = await fetch(`${API_BASE}/admin/users/${client.id}`, {
                                     method: "DELETE",
+                                    headers: authHeaders(),
                                   });
                                   if (res.ok) {
                                     showToast.success(

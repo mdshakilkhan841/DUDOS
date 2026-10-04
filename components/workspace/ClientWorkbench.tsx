@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { API_BASE } from "@/lib/dudos/packages";
 import { useRouter } from "next/navigation";
 import Link from "@/components/dudos-link";
 import {
@@ -419,7 +420,7 @@ export default function ClientWorkbench({
             let created: any = null;
             if (token) {
                 const dbRes = await fetch(
-                    "http://localhost:8000/api/v1/workspaces",
+                    `${API_BASE}/workspaces`,
                     {
                         method: "POST",
                         headers: {
@@ -479,7 +480,7 @@ export default function ClientWorkbench({
                   localStorage.getItem("dudos_auth_token")
                 : null;
         if (token) {
-            fetch("http://localhost:8000/api/v1/support/tickets/my", {
+            fetch(`${API_BASE}/support/tickets/my`, {
                 headers: { Authorization: `Bearer ${token}` },
             })
                 .then((res) => res.json())

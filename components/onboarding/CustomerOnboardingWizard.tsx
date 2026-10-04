@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { API_BASE } from "@/lib/dudos/packages";
 import { useRouter } from "next/navigation";
 import {
   Building2,
@@ -269,7 +270,7 @@ export function CustomerOnboardingWizard({ lang = "en" }: { lang?: string }) {
         typeof window !== "undefined"
           ? localStorage.getItem("dudos_jwt_token") || localStorage.getItem("dudos_auth_token")
           : null;
-      fetch("http://localhost:8000/api/v1/onboarding/draft", {
+      fetch(`${API_BASE}/onboarding/draft`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -292,7 +293,7 @@ export function CustomerOnboardingWizard({ lang = "en" }: { lang?: string }) {
       }).catch((err) => console.error("FastAPI onboarding draft sync error:", err));
 
       if (token) {
-        fetch("http://localhost:8000/api/v1/onboarding/active-draft", {
+        fetch(`${API_BASE}/onboarding/active-draft`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -319,7 +320,7 @@ export function CustomerOnboardingWizard({ lang = "en" }: { lang?: string }) {
           ? localStorage.getItem("dudos_jwt_token") || localStorage.getItem("dudos_auth_token")
           : null;
       if (token) {
-        const projRes = await fetch("http://localhost:8000/api/v1/projects/from-draft", {
+        const projRes = await fetch(`${API_BASE}/projects/from-draft`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

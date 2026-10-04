@@ -5,6 +5,8 @@ import assert from 'node:assert';
 
 const FASTAPI_BASE = 'http://127.0.0.1:8000';
 const NEXTJS_BASE = 'http://localhost:3000';
+// Must match the builder's DUDOS_SERVICE_TOKEN.
+const SERVICE_TOKEN = process.env.DEVSCOPE_SERVICE_TOKEN || '';
 
 async function runTests() {
   console.log('🚀 [PHASE 1 TEST] Starting DevScope Orchestration Bridge verification...\n');
@@ -20,7 +22,7 @@ async function runTests() {
   // Test 2: FastAPI DevScope Integration Probe
   console.log('Test 2: FastAPI DevScope Authenticated Probe (GET /api/v1/integrations/dudos/health)');
   const res2 = await fetch(`${FASTAPI_BASE}/api/v1/integrations/dudos/health`, {
-    headers: { 'X-DUDOS-Token': 'dudos_devscope_sec_2026_tok' },
+    headers: { 'X-DUDOS-Token': SERVICE_TOKEN },
   });
   assert.strictEqual(res2.status, 200, 'Integration health should return 200');
   const data2 = await res2.json();
@@ -67,7 +69,7 @@ async function runTests() {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-DUDOS-Token': 'dudos_devscope_sec_2026_tok',
+      'X-DUDOS-Token': SERVICE_TOKEN,
       'X-Request-Id': 'req_test_001',
     },
     body: JSON.stringify(submissionPayload),
@@ -85,7 +87,7 @@ async function runTests() {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-DUDOS-Token': 'dudos_devscope_sec_2026_tok',
+      'X-DUDOS-Token': SERVICE_TOKEN,
     },
     body: JSON.stringify(submissionPayload),
   });

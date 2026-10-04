@@ -43,6 +43,8 @@ import { AdminSupportTickets } from "./AdminSupportTickets";
 import { AdminPackages } from "./AdminPackages";
 import { getAuthToken } from "@/lib/dudos/assessment-sync";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1";
+
 type AdminNavigationItem = {
     id: string;
     title: string;
@@ -121,7 +123,7 @@ export default function AdminWorkbench({
 
     React.useEffect(() => {
         const token = getAuthToken();
-        fetch("http://localhost:8000/api/v1/admin/support/tickets", {
+        fetch(`${API_BASE}/admin/support/tickets`, {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
         })
             .then((res) => res.json())
@@ -136,7 +138,9 @@ export default function AdminWorkbench({
             })
             .catch(() => {});
 
-        fetch("http://localhost:8000/api/v1/admin/deployments")
+        fetch(`${API_BASE}/admin/deployments`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+        })
             .then((res) => res.json())
             .then((data) => {
                 if (data.tickets && Array.isArray(data.tickets)) {
@@ -513,7 +517,7 @@ export default function AdminWorkbench({
                             VPS: 103.145.118.42
                         </Badge>
                         <a
-                            href="http://localhost:8000/db"
+                            href={`${new URL(API_BASE).origin}/db`}
                             target="_blank"
                             rel="noreferrer"
                             className="text-link"
