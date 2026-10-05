@@ -22,6 +22,29 @@ import {
     FileText,
     RefreshCw,
     Lock,
+    Sparkles,
+    Target,
+    Globe,
+    Layers,
+    Palette,
+    CheckCircle2,
+    ChevronRight,
+    Edit3,
+    HelpCircle,
+    ShieldCheck,
+    ExternalLink,
+    Clock,
+    ShoppingBag,
+    Users,
+    CreditCard,
+    BarChart3,
+    Bot,
+    Cpu,
+    Shield,
+    LifeBuoy,
+    GraduationCap,
+    FlaskConical,
+    Trophy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -928,33 +951,242 @@ function Wizard({
         }
     }
 
+    const CAPABILITY_ITEMS = [
+        {
+            key: "website",
+            labelEn: "Web App & Portal",
+            labelBn: "ওয়েব অ্যাপ ও পোর্টাল",
+            descEn: "Responsive web application, landing page & client portal",
+            descBn: "রেসপনসিভ ওয়েব অ্যাপ ও ইউজার পোর্টাল",
+            icon: Globe,
+        },
+        {
+            key: "commerce",
+            labelEn: "E-Commerce & Store",
+            labelBn: "ই-কমার্স ও স্টোর",
+            descEn: "Product catalog, shopping cart, checkout & inventory",
+            descBn: "পণ্য ক্যাটালগ, কার্ট ও অনলাইন চেকআউট",
+            icon: ShoppingBag,
+        },
+        {
+            key: "crm",
+            labelEn: "CRM & Pipelines",
+            labelBn: "সিআরএম ও গ্রাহক তথ্য",
+            descEn: "Lead qualification, customer profiles & deal tracking",
+            descBn: "গ্রাহক তথ্য, লিড ও সেলস পাইপলাইন",
+            icon: Users,
+        },
+        {
+            key: "billing",
+            labelEn: "Billing & Invoicing",
+            labelBn: "বিলিং ও পেমেন্ট",
+            descEn: "Subscription plans, credit wallet & PayStation",
+            descBn: "সাবস্ক্রিপশন, ক্রেডিট ওয়ালেট ও স্বয়ংক্রিয় ইনভয়েস",
+            icon: CreditCard,
+        },
+        {
+            key: "analytics",
+            labelEn: "Analytics & Dashboard",
+            labelBn: "অ্যানালিটিক্স ও ড্যাশবোর্ড",
+            descEn: "Real-time metrics, KPI charts & executive summaries",
+            descBn: "রিয়েল-টাইম মেট্রিক্স ও কেপিআই ড্যাশবোর্ড",
+            icon: BarChart3,
+        },
+        {
+            key: "AI assistant",
+            labelEn: "AI Assistant & Bots",
+            labelBn: "এআই সহকারী ও বট",
+            descEn: "Autonomous LLM chatbot, natural language Q&A",
+            descBn: "এলএলএম চ্যাটবট ও প্রাকৃতিক ভাষার সহায়তা",
+            icon: Bot,
+        },
+        {
+            key: "API / MCP",
+            labelEn: "API & MCP Tooling",
+            labelBn: "এপিআই ও এমসিপি সংযোগ",
+            descEn: "REST APIs & Model Context Protocol agent adapters",
+            descBn: "রেস্ট এপিআই ও মডেল কনটেক্সট প্রোটোকল এডাপ্টার",
+            icon: Cpu,
+        },
+        {
+            key: "staff operations",
+            labelEn: "Staff & Role RBAC",
+            labelBn: "টিম ও রোল ম্যানেজমেন্ট",
+            descEn: "Internal team access, user privileges & permissions",
+            descBn: "অভ্যন্তরীণ অ্যাডমিন ও ভূমিকাভিত্তিক নিয়ন্ত্রণ",
+            icon: Shield,
+        },
+        {
+            key: "support",
+            labelEn: "Support Helpdesk",
+            labelBn: "সাপোর্ট হেল্পডেস্ক",
+            descEn: "Customer issue tickets, live messaging & resolution queues",
+            descBn: "টিকিট সমাধান ও গ্রাহক সহায়তা",
+            icon: LifeBuoy,
+        },
+        {
+            key: "talent projects",
+            labelEn: "Talent & Portfolios",
+            labelBn: "ট্যালেন্ট ও পোর্টফোলিও",
+            descEn: "Applicant portfolios, skill verification & assessments",
+            descBn: "প্রতিভা প্রোফাইল ও দক্ষতা যাচাই",
+            icon: GraduationCap,
+        },
+        {
+            key: "research",
+            labelEn: "Research & Labs",
+            labelBn: "গবেষণা ও লিভিং ল্যাব",
+            descEn: "Experimental data collection & analytical workflows",
+            descBn: "গবেষণা তথ্য ও পরীক্ষামূলক প্রকল্প",
+            icon: FlaskConical,
+        },
+        {
+            key: "competitions",
+            labelEn: "Challenges & Contests",
+            labelBn: "চ্যালেঞ্জ ও প্রতিযোগিতা",
+            descEn: "Submissions, judging rubrics & leaderboard rewards",
+            descBn: "প্রতিযোগিতা জমা ও মূল্যায়ন রুব্রিক",
+            icon: Trophy,
+        },
+    ];
+
+    const STEP_META = [
+        {
+            icon: Target,
+            en: "Scope & Goals",
+            bn: "লক্ষ্য ও পরিধি",
+            subEn: "Define your project name and the transformative business outcomes you want to achieve.",
+            subBn: "প্রজেক্টের নাম ও প্রত্যাশিত ফলাফল নির্ধারণ করুন।",
+        },
+        {
+            icon: Globe,
+            en: "Business & Web",
+            bn: "প্রতিষ্ঠান ও ওয়েব",
+            subEn: "Provide your organization details, audience, and current digital footprint.",
+            subBn: "আপনার প্রতিষ্ঠান, দেশ, ভাষা ও বর্তমান ওয়েবসাইটের তথ্য দিন।",
+        },
+        {
+            icon: Layers,
+            en: "Capabilities",
+            bn: "সুবিধা ও মডিউল",
+            subEn: "Select the architectural modules and specialized capabilities your project requires.",
+            subBn: "আপনার সিস্টেমের জন্য প্রয়োজনীয় সুবিধা ও মডিউল নির্বাচন করুন।",
+        },
+        {
+            icon: Palette,
+            en: "Brand & Assets",
+            bn: "ব্র্যান্ড ও ফাইল",
+            subEn: "Attach brand guidelines, budget expectations, and reference requirements documents.",
+            subBn: "ব্র্যান্ড গাইডলাইন, লোগো, বাজেট ও প্রয়োজনীয় ডকুমেন্ট যুক্ত করুন।",
+        },
+        {
+            icon: Sparkles,
+            en: "Review Blueprint",
+            bn: "ব্লুপ্রিন্ট পর্যালোচনা",
+            subEn: "Review your compiled AI DLC specification blueprint before proceeding to build handoff.",
+            subBn: "বিল্ডারে পাঠানোর আগে সম্পূর্ণ এআই ব্লুপ্রিন্ট পর্যালোচনা ও নিশ্চিত করুন।",
+        },
+    ];
+
+    const currentModules = (data.modules || "")
+        .split(", ")
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+    const toggleCapability = (key: string) => {
+        const next = currentModules.includes(key)
+            ? currentModules.filter((k) => k !== key)
+            : [...currentModules, key];
+        setData((curr) => mergeAssessmentData(curr, { modules: next.join(", ") }));
+    };
+
+    const completionPercent = Math.round(((step + 1) / steps.length) * 100);
+
     return (
-        <div className="wizard-layout">
-            <aside className="wizard-nav">
-                <p className="micro-label">
-                    {lang === "bn" ? "আপনার রূপান্তর" : "YOUR TRANSFORMATION"}
-                </p>
-                {steps.map(([en, bn], i) => (
-                    <button
-                        key={en}
-                        type="button"
-                        onClick={() => setStep(i)}
-                        className={step === i ? "active" : ""}
-                    >
-                        <span>{i < step ? <Check size={14} /> : i + 1}</span>
-                        {lang === "bn" ? bn : en}
-                    </button>
-                ))}
-                <Progress value={((step + 1) / steps.length) * 100} />
-                <small>
-                    {step + 1} / {steps.length}
-                </small>
-            </aside>
-            <div className="wizard-main">
-                {/* In the portal the project is chosen from the overview list, so the
-                    resume picker only belongs to the standalone wizard page. */}
-                {!onSubmitted && drafts.length > 0 && (
-                    <div className="resume-row">
+        <div className="space-y-6">
+            {/* 1. Header Banner & Step Rail */}
+            <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-teal-50/30 p-5 sm:p-6 shadow-xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-200/80">
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-[#087f79]/10 text-[#087f79]">
+                                <Sparkles size={14} />
+                            </span>
+                            <span className="text-xs font-bold uppercase tracking-wider text-[#087f79]">
+                                {lang === "bn" ? "এআই স্পেসিফিকেশন স্টুডিও" : "AI SPECIFICATION STUDIO"}
+                            </span>
+                        </div>
+                        <h2 className="mt-1 text-xl sm:text-2xl font-black text-[#162c38]">
+                            {STEP_META[step]?.[lang === "bn" ? "bn" : "en"]}
+                        </h2>
+                        <p className="mt-1 text-xs sm:text-sm text-[#5b6f7b] max-w-2xl">
+                            {STEP_META[step]?.[lang === "bn" ? "subBn" : "subEn"]}
+                        </p>
+                    </div>
+
+                    <div className="flex flex-col sm:items-end gap-1.5 shrink-0">
+                        <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="border-teal-200 bg-teal-50 text-[#087f79] font-mono text-xs">
+                                {lang === "bn" ? `ধাপ ${step + 1} / ${steps.length}` : `Step ${step + 1} of ${steps.length}`}
+                            </Badge>
+                            <span className="text-xs font-bold text-[#162c38]">{completionPercent}%</span>
+                        </div>
+                        <Progress value={completionPercent} className="w-32 h-2" />
+                    </div>
+                </div>
+
+                {/* Interactive Multi-Step Indicator Rail */}
+                <div className="mt-4 grid grid-cols-2 sm:grid-cols-5 gap-2">
+                    {steps.map(([en, bn], i) => {
+                        const Icon = STEP_META[i]?.icon || Target;
+                        const isDone = i < step;
+                        const isCurrent = i === step;
+                        return (
+                            <button
+                                key={en}
+                                type="button"
+                                onClick={() => setStep(i)}
+                                className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                                    isCurrent
+                                        ? "border-[#087f79] bg-white ring-2 ring-[#087f79]/20 shadow-xs"
+                                        : isDone
+                                          ? "border-emerald-200 bg-emerald-50/60 hover:bg-emerald-50 text-emerald-900"
+                                          : "border-slate-200/80 bg-white/70 hover:bg-white text-slate-500"
+                                }`}
+                            >
+                                <span
+                                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${
+                                        isCurrent
+                                            ? "bg-[#087f79] text-white shadow-xs"
+                                            : isDone
+                                              ? "bg-emerald-600 text-white"
+                                              : "bg-slate-100 text-slate-500"
+                                    }`}
+                                >
+                                    {isDone ? <Check size={14} /> : <Icon size={14} />}
+                                </span>
+                                <div className="min-w-0 flex-1 truncate">
+                                    <p className={`text-xs font-bold truncate ${isCurrent ? "text-[#087f79]" : isDone ? "text-emerald-900" : "text-slate-700"}`}>
+                                        {lang === "bn" ? bn : en}
+                                    </p>
+                                    <p className="text-[10px] text-slate-400 font-mono">
+                                        {isDone ? (lang === "bn" ? "সম্পন্ন ✓" : "Done ✓") : isCurrent ? (lang === "bn" ? "বর্তমান" : "Active") : `0${i + 1}`}
+                                    </p>
+                                </div>
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Resume Saved Draft Pill (if standalone page) */}
+            {!onSubmitted && drafts.length > 0 && (
+                <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl border border-slate-200 bg-white shadow-2xs">
+                    <div className="flex items-center gap-2 text-xs text-[#5b6f7b]">
+                        <Clock size={14} className="text-[#087f79]" />
+                        <span className="font-semibold">{lang === "bn" ? "সংরক্ষিত খসড়া:" : "Saved Drafts:"}</span>
+                    </div>
+                    <div className="flex items-center gap-2 flex-1 max-w-md">
                         <Choose
                             label="Resume saved assessment"
                             value={saved?.id || ""}
@@ -975,6 +1207,7 @@ function Wizard({
                         />
                         <Button
                             variant="ghost"
+                            size="sm"
                             onClick={() => {
                                 setSaved(null);
                                 setData({});
@@ -985,19 +1218,20 @@ function Wizard({
                             {lang === "bn" ? "নতুন" : "New"}
                         </Button>
                     </div>
-                )}
-                <div className="step-title">
-                    <span className="eyebrow">STEP 0{step + 1}</span>
-                    <h2>{steps[step][lang === "bn" ? 1 : 0]}</h2>
                 </div>
+            )}
+
+            {/* 2. Step Form Body */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-7 shadow-xs">
                 {step < steps.length - 1 ? (
-                    <>
-                        <div className="form-grid">
+                    <div className="space-y-6">
+                        {/* Standard fields for current step */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             {mod.fields
                                 .filter((f) =>
-                                    (
-                                        steps[step][2] as readonly string[]
-                                    ).includes(f.key),
+                                    (steps[step][2] as readonly string[]).includes(f.key) &&
+                                    // Custom handling for modules in Step 2
+                                    f.key !== "modules",
                                 )
                                 .map((f) => (
                                     <FieldControl
@@ -1015,142 +1249,341 @@ function Wizard({
                                     />
                                 ))}
                         </div>
+
+                        {/* Step 1 Context Notice */}
                         {step === 1 && (
-                            <Notice>
-                                {lang === "bn"
-                                    ? "ওয়েবসাইটের URL রেকর্ড হবে; স্বয়ংক্রিয় ক্রল বা বর্তমান সিস্টেমে লগইন করা হবে না।"
-                                    : "Website addresses are recorded for review; this assessment does not crawl or sign into external systems."}
-                            </Notice>
+                            <div className="flex items-start gap-3 p-3.5 rounded-xl border border-teal-200 bg-teal-50/70 text-xs text-teal-900">
+                                <Globe className="h-4 w-4 shrink-0 text-[#087f79] mt-0.5" />
+                                <p>
+                                    {lang === "bn"
+                                        ? "ওয়েবসাইটের URL রেকর্ড হবে; স্বয়ংক্রিয় ক্রল বা বর্তমান সিস্টেমে লগইন করা হবে না।"
+                                        : "Website addresses are recorded for design reference; our assessment does not modify or crawl external systems without approval."}
+                                </p>
+                            </div>
                         )}
+
+                        {/* Step 2 Interactive Capabilities Grid */}
                         {step === 2 && (
-                            <Multi
-                                label="Capabilities"
-                                value={(data.modules || "")
-                                    .split(", ")
-                                    .filter(Boolean)}
-                                onChange={(v) =>
-                                    setData((current) =>
-                                        mergeAssessmentData(current, {
-                                            modules: v.join(", "),
-                                        }),
-                                    )
-                                }
-                                options={[
-                                    "website",
-                                    "commerce",
-                                    "crm",
-                                    "billing",
-                                    "analytics",
-                                    "AI assistant",
-                                    "API / MCP",
-                                    "staff operations",
-                                    "talent projects",
-                                    "research",
-                                    "competitions",
-                                    "support",
-                                ]}
-                            />
-                        )}
-                        {step === 3 && (
-                            <AssessmentFiles
-                                recordId={saved?.id}
-                                ensureRecordId={async () =>
-                                    saved?.id || (await save())?.id || null
-                                }
-                                lang={lang}
-                            />
-                        )}
-                        {step === 3 && (
-                            <Notice>
-                                {lang === "bn"
-                                    ? "অনুমতি একটি দাবিমাত্র; যাচাই ছাড়া প্রকাশের অনুমোদন নয়। কখনও পাসওয়ার্ড বা API কী দেবেন না।"
-                                    : "Record permission references only. Rights claims need verification before publication. Never enter passwords or API keys."}
-                            </Notice>
-                        )}
-                    </>
-                ) : (
-                    <>
-                        <div className="review-summary">
-                            {mod.fields.map((f) => (
-                                <div key={f.key}>
-                                    <span>
-                                        {lang === "bn" ? f.bn : f.label}
-                                    </span>
-                                    <p>
-                                        {data[f.key] ||
-                                            (lang === "bn"
-                                                ? "এখনও দেওয়া হয়নি"
-                                                : "Not supplied")}
+                            <div className="space-y-4 pt-2 border-t border-slate-100">
+                                <div>
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-sm font-bold text-[#162c38]">
+                                            {lang === "bn" ? "প্রয়োজনীয় মডিউল ও সুবিধা নির্বাচন করুন" : "Select Required Modules & Capabilities"}
+                                        </Label>
+                                        <span className="text-xs font-mono text-[#087f79] font-bold">
+                                            {currentModules.length} {lang === "bn" ? "টি নির্বাচিত" : "selected"}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-[#5b6f7b] mt-0.5">
+                                        {lang === "bn"
+                                            ? "আপনার সফটওয়্যার প্ল্যাটফর্মের জন্য প্রয়োজনীয় সুবিধাগুলো বেছে নিন। এআই বিল্ডার এগুলো স্বয়ংক্রিয়ভাবে কোড করবে।"
+                                            : "Choose the components your platform needs. DevScope AI Builder automatically structures components, APIs, and schemas for each."}
                                     </p>
                                 </div>
-                            ))}
-                        </div>
-                        <Notice>
-                            {lang === "bn"
-                                ? "এই রেকর্ড মূল্যায়নের খসড়া। মূল্য, সংযোগ, সেবা বা রিলিজ অনুমোদিত হয়নি।"
-                                : "This is an assessment draft. Price, integrations, service eligibility and release approval remain to be confirmed."}
-                        </Notice>
-                    </>
-                )}
-                {error && <Notice tone="error">{error}</Notice>}
-                {saved && (
-                    <Notice tone="success">
-                        <div className="flex flex-wrap items-center justify-between gap-3 w-full">
-                            <div>
-                                <span>
-                                    {lang === "bn"
-                                        ? "সংরক্ষিত সংস্করণ"
-                                        : "Saved version"}{" "}
-                                    {saved.version} ·{" "}
-                                </span>
-                                <Link href={`/${lang}/app/records/assessment`}>
-                                    {lang === "bn"
-                                        ? "মূল্যায়ন দেখুন"
-                                        : "View assessments"}
-                                </Link>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {CAPABILITY_ITEMS.map((item) => {
+                                        const isSelected = currentModules.includes(item.key);
+                                        const ItemIcon = item.icon;
+                                        return (
+                                            <button
+                                                key={item.key}
+                                                type="button"
+                                                onClick={() => toggleCapability(item.key)}
+                                                className={`group flex items-start gap-3 p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                                                    isSelected
+                                                        ? "border-[#087f79] bg-[#edf7f4] ring-1 ring-[#087f79] shadow-xs"
+                                                        : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/80"
+                                                }`}
+                                            >
+                                                <div
+                                                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                                                        isSelected
+                                                            ? "bg-[#087f79] text-white"
+                                                            : "bg-slate-100 text-slate-600 group-hover:bg-teal-50 group-hover:text-[#087f79]"
+                                                    }`}
+                                                >
+                                                    <ItemIcon size={18} />
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-center justify-between gap-1">
+                                                        <h4 className={`text-xs font-bold leading-tight ${isSelected ? "text-[#087f79]" : "text-[#162c38]"}`}>
+                                                            {lang === "bn" ? item.labelBn : item.labelEn}
+                                                        </h4>
+                                                        {isSelected && (
+                                                            <Check size={14} className="text-[#087f79] shrink-0" />
+                                                        )}
+                                                    </div>
+                                                    <p className="text-[11px] text-[#5b6f7b] mt-1 line-clamp-2 leading-relaxed">
+                                                        {lang === "bn" ? item.descBn : item.descEn}
+                                                    </p>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Step 3 Brand, Rights, Budget & Files */}
+                        {step === 3 && (
+                            <div className="space-y-4 pt-2 border-t border-slate-100">
+                                <div>
+                                    <Label className="text-sm font-bold text-[#162c38]">
+                                        {lang === "bn" ? "রেফারেন্স ফাইল ও ব্র্যান্ড অ্যাসেট আপলোড" : "Reference Files & Brand Assets"}
+                                    </Label>
+                                    <p className="text-xs text-[#5b6f7b] mt-0.5">
+                                        {lang === "bn"
+                                            ? "লোগো, ব্র্যান্ড গাইড, স্পেসিফিকেশন ডকুমেন্ট বা রেফারেন্স স্ক্রিনশট আপলোড করুন।"
+                                            : "Upload your brand logo, design guidelines, SRS documentation, or schema references."}
+                                    </p>
+                                </div>
+                                <AssessmentFiles
+                                    recordId={saved?.id}
+                                    ensureRecordId={async () =>
+                                        saved?.id || (await save())?.id || null
+                                    }
+                                    lang={lang}
+                                />
+                                <div className="flex items-start gap-3 p-3.5 rounded-xl border border-amber-200 bg-amber-50/70 text-xs text-amber-900">
+                                    <ShieldCheck className="h-4 w-4 shrink-0 text-amber-700 mt-0.5" />
+                                    <p>
+                                        {lang === "bn"
+                                            ? "অনুমতি একটি দাবিমাত্র; যাচাই ছাড়া প্রকাশের অনুমোদন নয়। কখনও পাসওয়ার্ড বা সিক্রেট API কী দেবেন না।"
+                                            : "Files and references are held securely for project scoping. Never enter production passwords or live secret API keys."}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    /* Step 5: Executive AI DLC Build Blueprint Review */
+                    <div className="space-y-6">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-emerald-200 bg-emerald-50/80 text-emerald-950">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white">
+                                    <CheckCircle2 size={22} />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold">
+                                        {lang === "bn" ? "এআই বিল্ড ব্লুপ্রিন্ট প্রস্তুত" : "AI DLC Build Blueprint Ready for Handoff"}
+                                    </h3>
+                                    <p className="text-xs text-emerald-800 mt-0.5">
+                                        {lang === "bn"
+                                            ? "নিচের উত্তরগুলো যাচাই করুন। জমা দিলে এটি আপনার ওয়ার্কস্পেসে সংরক্ষিত হবে।"
+                                            : "Review the answers below. Submitting will save your project draft ready for build dispatch."}
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                    </Notice>
+
+                        {/* Blueprint Categorized Cards */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            {/* Card 1: Identity & Scope */}
+                            <div className="rounded-xl border border-slate-200 bg-[#f8fafb] p-4 space-y-3">
+                                <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                                    <div className="flex items-center gap-2">
+                                        <Target size={15} className="text-[#087f79]" />
+                                        <h4 className="text-xs font-bold text-[#162c38] uppercase tracking-wider">
+                                            {lang === "bn" ? "প্রজেক্ট পরিচিতি ও লক্ষ্য" : "Project Identity & Goals"}
+                                        </h4>
+                                    </div>
+                                    <Button variant="ghost" size="sm" className="h-7 text-xs text-[#087f79]" onClick={() => setStep(0)}>
+                                        <Edit3 size={12} className="mr-1" />
+                                        {lang === "bn" ? "সম্পাদনা" : "Edit"}
+                                    </Button>
+                                </div>
+                                <div className="space-y-2 text-xs">
+                                    <div>
+                                        <span className="text-slate-400 font-semibold">{lang === "bn" ? "প্রজেক্টের নাম:" : "Project Name:"}</span>
+                                        <p className="font-bold text-[#162c38] mt-0.5">{data.project_name || "—"}</p>
+                                    </div>
+                                    <div>
+                                        <span className="text-slate-400 font-semibold">{lang === "bn" ? "প্রত্যাশিত ফলাফল:" : "Desired Outcomes:"}</span>
+                                        <p className="text-slate-700 mt-0.5 whitespace-pre-wrap">{data.outcomes || "—"}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Card 2: Business & Digital Footprint */}
+                            <div className="rounded-xl border border-slate-200 bg-[#f8fafb] p-4 space-y-3">
+                                <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                                    <div className="flex items-center gap-2">
+                                        <Globe size={15} className="text-[#087f79]" />
+                                        <h4 className="text-xs font-bold text-[#162c38] uppercase tracking-wider">
+                                            {lang === "bn" ? "প্রতিষ্ঠান ও অনলাইন তথ্য" : "Business & Online Presence"}
+                                        </h4>
+                                    </div>
+                                    <Button variant="ghost" size="sm" className="h-7 text-xs text-[#087f79]" onClick={() => setStep(1)}>
+                                        <Edit3 size={12} className="mr-1" />
+                                        {lang === "bn" ? "সম্পাদনা" : "Edit"}
+                                    </Button>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                    <div>
+                                        <span className="text-slate-400 font-semibold">{lang === "bn" ? "প্রতিষ্ঠান:" : "Organization:"}</span>
+                                        <p className="font-bold text-[#162c38] mt-0.5">{data.organization || "—"}</p>
+                                    </div>
+                                    <div>
+                                        <span className="text-slate-400 font-semibold">{lang === "bn" ? "খাত / সেক্টর:" : "Sector:"}</span>
+                                        <p className="font-bold text-[#162c38] mt-0.5">{data.sector || "—"}</p>
+                                    </div>
+                                    <div className="col-span-2">
+                                        <span className="text-slate-400 font-semibold">{lang === "bn" ? "ওয়েবসাইট লিঙ্ক:" : "Website:"}</span>
+                                        <p className="font-mono text-[#087f79] mt-0.5 truncate">{data.site_url || "—"}</p>
+                                    </div>
+                                    <div>
+                                        <span className="text-slate-400 font-semibold">{lang === "bn" ? "দেশ:" : "Country:"}</span>
+                                        <p className="font-bold text-[#162c38] mt-0.5">{data.country || "—"}</p>
+                                    </div>
+                                    <div>
+                                        <span className="text-slate-400 font-semibold">{lang === "bn" ? "ভাষা:" : "Languages:"}</span>
+                                        <p className="font-bold text-[#162c38] mt-0.5">{data.languages || "—"}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Card 3: Capabilities & Modules */}
+                            <div className="rounded-xl border border-slate-200 bg-[#f8fafb] p-4 space-y-3">
+                                <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                                    <div className="flex items-center gap-2">
+                                        <Layers size={15} className="text-[#087f79]" />
+                                        <h4 className="text-xs font-bold text-[#162c38] uppercase tracking-wider">
+                                            {lang === "bn" ? "নির্বাচিত মডিউল ও সুবিধা" : "Selected Capabilities"}
+                                        </h4>
+                                    </div>
+                                    <Button variant="ghost" size="sm" className="h-7 text-xs text-[#087f79]" onClick={() => setStep(2)}>
+                                        <Edit3 size={12} className="mr-1" />
+                                        {lang === "bn" ? "সম্পাদনা" : "Edit"}
+                                    </Button>
+                                </div>
+                                <div className="space-y-2 text-xs">
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {currentModules.length > 0 ? (
+                                            currentModules.map((m) => (
+                                                <Badge key={m} variant="outline" className="border-teal-300 bg-teal-50 text-[#087f79] text-xs font-medium capitalize">
+                                                    {m}
+                                                </Badge>
+                                            ))
+                                        ) : (
+                                            <span className="text-slate-400 italic">{lang === "bn" ? "কোনো মডিউল নির্বাচিত হয়নি" : "None selected"}</span>
+                                        )}
+                                    </div>
+                                    {data.systems && (
+                                        <div className="pt-2 border-t border-slate-200/60">
+                                            <span className="text-slate-400 font-semibold">{lang === "bn" ? "বর্তমান সিস্টেম:" : "Existing Systems:"}</span>
+                                            <p className="text-slate-700 mt-0.5">{data.systems}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Card 4: Brand & Budget */}
+                            <div className="rounded-xl border border-slate-200 bg-[#f8fafb] p-4 space-y-3">
+                                <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                                    <div className="flex items-center gap-2">
+                                        <Palette size={15} className="text-[#087f79]" />
+                                        <h4 className="text-xs font-bold text-[#162c38] uppercase tracking-wider">
+                                            {lang === "bn" ? "ব্র্যান্ডিং, বাজেট ও অধিকার" : "Brand, Budget & Rights"}
+                                        </h4>
+                                    </div>
+                                    <Button variant="ghost" size="sm" className="h-7 text-xs text-[#087f79]" onClick={() => setStep(3)}>
+                                        <Edit3 size={12} className="mr-1" />
+                                        {lang === "bn" ? "সম্পাদনা" : "Edit"}
+                                    </Button>
+                                </div>
+                                <div className="space-y-2 text-xs">
+                                    <div>
+                                        <span className="text-slate-400 font-semibold">{lang === "bn" ? "বাজেট প্রত্যাশা:" : "Budget Expectation:"}</span>
+                                        <p className="font-bold text-[#162c38] mt-0.5">{data.budget || "—"}</p>
+                                    </div>
+                                    {data.brand && (
+                                        <div>
+                                            <span className="text-slate-400 font-semibold">{lang === "bn" ? "ব্র্যান্ড চাহিদা:" : "Brand Requirements:"}</span>
+                                            <p className="text-slate-700 mt-0.5 line-clamp-2">{data.brand}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-600">
+                            {lang === "bn"
+                                ? "এই রেকর্ডটি মূল্যায়নের খসড়া। নিশ্চিত করার পর প্রজেক্টটি ওয়ার্কস্পেসে যুক্ত হবে এবং পেমেন্ট সম্পন্ন করে বিল্ডারে হস্তান্তর করা যাবে।"
+                                : "This assessment blueprint will be stored in your workspace. After confirmation, you can complete payment and hand it over to the autonomous builder."}
+                        </div>
+                    </div>
                 )}
-                <div className="form-actions flex flex-wrap items-center gap-2">
+
+                {/* Error Banner */}
+                {error && <Notice tone="error">{error}</Notice>}
+
+                {/* Saved Notice */}
+                {saved && (
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl border border-emerald-200 bg-emerald-50 text-xs text-emerald-900">
+                        <div className="flex items-center gap-2">
+                            <CheckCircle2 size={15} className="text-emerald-600" />
+                            <span>
+                                {lang === "bn" ? "সংরক্ষিত সংস্করণ" : "Draft version"} <strong>{saved.version}</strong> (ID: <code className="font-mono">{saved.id}</code>)
+                            </span>
+                        </div>
+                        <Link href={`/${lang}/app/overview`} className="text-[#087f79] hover:underline font-bold">
+                            {lang === "bn" ? "ওয়ার্কস্পেসে দেখুন" : "View in workspace"} →
+                        </Link>
+                    </div>
+                )}
+
+                {/* 3. Sticky Action Bar */}
+                <div className="mt-8 flex flex-wrap items-center justify-between gap-3 pt-5 border-t border-slate-100">
                     <Button
+                        type="button"
                         variant="outline"
                         disabled={step === 0}
                         onClick={() => setStep(step - 1)}
+                        className="cursor-pointer"
                     >
                         <ArrowLeft size={16} />
-                        {lang === "bn" ? "পূর্ববর্তী" : "Back"}
+                        {lang === "bn" ? "পূর্ববর্তী ধাপ" : "Previous Step"}
                     </Button>
-                    <Button
-                        variant="outline"
-                        disabled={busy}
-                        onClick={() => void save(false)}
-                    >
-                        <Save size={16} />
-                        {lang === "bn" ? "খসড়া সংরক্ষণ" : "Save draft"}
-                    </Button>
-                    {step < steps.length - 1 ? (
-                        <Button onClick={() => setStep(step + 1)}>
-                            {lang === "bn" ? "পরবর্তী" : "Continue"}
-                            <ArrowRight size={16} />
+
+                    <div className="flex items-center gap-2 flex-wrap ml-auto">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            disabled={busy}
+                            onClick={() => void save(false)}
+                            className="cursor-pointer"
+                        >
+                            <Save size={16} />
+                            {lang === "bn" ? "খসড়া সংরক্ষণ" : "Save Draft"}
                         </Button>
-                    ) : (
-                        <div className="flex items-center gap-2 flex-wrap">
+
+                        {step < steps.length - 1 ? (
                             <Button
+                                type="button"
+                                onClick={() => setStep(step + 1)}
+                                className="bg-[#087f79] hover:bg-[#076e68] text-white font-bold cursor-pointer"
+                            >
+                                <span>{lang === "bn" ? "পরবর্তী ধাপ" : "Continue"}</span>
+                                <ArrowRight size={16} />
+                            </Button>
+                        ) : (
+                            <Button
+                                type="button"
                                 disabled={busy}
                                 onClick={() => void submitAndGoToPortal()}
-                                className="bg-[#087f79] hover:bg-[#066560] text-white font-bold px-4 py-2 text-sm flex items-center gap-2 shadow-sm"
+                                className="bg-[#087f79] hover:bg-[#066560] text-white font-bold px-5 py-2 text-sm flex items-center gap-2 shadow-sm cursor-pointer"
                             >
                                 <Check size={16} />
                                 <span>
                                     {lang === "bn"
                                         ? "নিশ্চিত করুন ও পেমেন্টে যান"
-                                        : "Confirm & continue to payment"}
+                                        : "Confirm & Continue to Payment"}
                                 </span>
                                 <ArrowRight size={14} />
                             </Button>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

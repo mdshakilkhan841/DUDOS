@@ -14,6 +14,8 @@ import {
     RefreshCw,
     ExternalLink,
     ChevronRight,
+    ChevronDown,
+    ChevronUp,
     Shield,
     Layers,
     Send,
@@ -35,6 +37,16 @@ import {
     Search,
     Pencil,
     Code2,
+    LayoutGrid,
+    List,
+    Eye,
+    Play,
+    ArrowUpDown,
+    Filter,
+    AlertCircle,
+    Laptop,
+    ArrowUpRight,
+    X,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { moduleById } from "@/lib/dudos/modules";
@@ -662,6 +674,13 @@ export function CustomerUserPanel({
     const [projectFilter, setProjectFilter] = useState<"all" | ProjectStage>(
         "all",
     );
+    const [projectsViewMode, setProjectsViewMode] = useState<"grid" | "list">("grid");
+    const [projectSortBy, setProjectSortBy] = useState<"updated" | "name" | "status">("updated");
+    const [expandedProjectDetails, setExpandedProjectDetails] = useState<Record<string, boolean>>({});
+    const toggleProjectDetails = (id: string) => {
+        setExpandedProjectDetails((prev) => ({ ...prev, [id]: !prev[id] }));
+    };
+    const [overviewSpecTab, setOverviewSpecTab] = useState<"blueprint" | "answers" | "billing">("blueprint");
     const [deploymentSearch, setDeploymentSearch] = useState("");
     const [supportFilter, setSupportFilter] = useState("all");
     const [supportSearch, setSupportSearch] = useState("");
@@ -1919,6 +1938,21 @@ ${draft.projectScope}
                     (value || "").toLowerCase().includes(searchQuery),
                 )),
     );
+
+    const sortedProjects = useMemo(() => {
+        return [...filteredProjects].sort((a, b) => {
+            if (projectSortBy === "name") {
+                return (a.draft.title || "").localeCompare(b.draft.title || "");
+            }
+            if (projectSortBy === "status") {
+                return statusRank(b.status) - statusRank(a.status);
+            }
+            const dateA = a.updatedAt || a.draft.updatedAt || a.draft.savedAt || "";
+            const dateB = b.updatedAt || b.draft.updatedAt || b.draft.savedAt || "";
+            return dateB.localeCompare(dateA);
+        });
+    }, [filteredProjects, projectSortBy]);
+
     const openPayment = (project: WorkspaceProject) => {
         selectProject(project);
         const quotation = project.invoice && project.invoice.status !== "paid";
@@ -2257,272 +2291,563 @@ ${draft.projectScope}
         <div className="space-y-6">
             {(activeSection === "workflow" || activeSection === "billing") && (
                 <section
-                    className="space-y-5"
+                    className="space-y-6"
                     aria-labelledby="workspace-overview-title"
                 >
+                    {/* 1. Header with Eyebrow and Quick Action */}
                     <div className="section-heading">
                         <div>
                             <p className="eyebrow">
                                 <span />
                                 {lang === "bn"
-                                    ? "আপনার ওয়ার্কস্পেস"
+                                    ? "আপনার কর্মপরিসর"
                                     : "YOUR WORKSPACE"}
                             </p>
                             <h1 id="workspace-overview-title">
                                 {workspaceName ||
                                     (lang === "bn"
-                                        ? "ওয়ার্কস্পেস ওভারভিউ"
-                                        : "Workspace overview")}
+                                        ? "ওয়ার্কস্পেস সংক্ষিপ্ত চিত্র"
+                                        : "Workspace Overview")}
                             </h1>
                             <p>
                                 {lang === "bn"
-                                    ? "অ্যাসেসমেন্ট সম্পন্ন করুন, পেমেন্ট করুন, তারপর প্রজেক্ট বিল্ডারে জমা দিন।"
-                                    : "Complete the assessment, make the payment, then submit your project to the builder."}
+                                    ? "সম্পূর্ণ অ্যাসেসমেন্ট, স্বয়ংক্রিয় বিল্ড অগ্রগতি ও ডিপ্লয়মেন্ট পর্যবেক্ষণ এক জায়গায়।"
+                                    : "Monitor assessments, automated AI builder progress, and live deployments in one place."}
                             </p>
                         </div>
                         <Button
                             size="sm"
                             onClick={() => onOpenAssessment?.("new")}
+                            className="bg-[#087f79] hover:bg-[#076e68] text-white font-bold cursor-pointer"
                         >
                             <Plus className="mr-1 h-4 w-4" />
                             {lang === "bn"
                                 ? "নতুন অ্যাসেসমেন্ট"
-                                : "New assessment"}
+                                : "New Assessment"}
                         </Button>
+                    </div>
+
+                    {/* 2. Executive Metrics KPI Grid */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        {/* Metric 1: Total Projects */}
+                        <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-2xs">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                                    {lang === "bn" ? "মোট প্রজেক্ট" : "Total Projects"}
+                                </span>
+                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-50 text-[#087f79]">
+                                    <FolderKanban size={16} />
+                                </div>
+                            </div>
+                            <div className="mt-2 flex items-baseline gap-2">
+                                <span className="text-2xl sm:text-3xl font-black text-[#162c38]">
+                                    {workspaceProjects.length}
+                                </span>
+                                <span className="text-xs text-slate-500 font-medium">
+                                    {workspaceProjects.length === 1 ? "project" : "projects"}
+                                </span>
+                            </div>
+                            <p className="mt-1 text-[11px] text-slate-500 truncate">
+                                {workspaceProjects.filter((p) => p.status === "live" || p.status === "completed").length} {lang === "bn" ? "লাইভ" : "live"} · {workspaceProjects.filter((p) => p.status === "in_development" || p.status === "deploying").length} {lang === "bn" ? "বিল্ড চলছে" : "building"}
+                            </p>
+                        </div>
+
+                        {/* Metric 2: Live Deployments */}
+                        <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-2xs">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                                    {lang === "bn" ? "লাইভ সাইট" : "Live Sites"}
+                                </span>
+                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                                    <Globe size={16} />
+                                </div>
+                            </div>
+                            <div className="mt-2 flex items-baseline gap-2">
+                                <span className="text-2xl sm:text-3xl font-black text-emerald-600">
+                                    {workspaceProjects.filter((p) => p.status === "live" || p.status === "completed").length}
+                                </span>
+                                <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                </span>
+                            </div>
+                            <p className="mt-1 text-[11px] text-slate-500 truncate">
+                                {lang === "bn" ? "ড্যাফোডিল ক্লাউড ভিপিএস" : "Deployed on Cloud VPS"}
+                            </p>
+                        </div>
+
+                        {/* Metric 3: AI Build Status */}
+                        <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-2xs">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                                    {lang === "bn" ? "এআই বিল্ডার ইঞ্জিন" : "AI Build Engine"}
+                                </span>
+                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
+                                    <Sparkles size={16} />
+                                </div>
+                            </div>
+                            <div className="mt-2 flex items-baseline gap-2">
+                                <span className="text-lg sm:text-xl font-bold text-[#162c38]">
+                                    {workspaceProjects.filter((p) => p.status === "in_development" || p.status === "deploying").length > 0
+                                        ? (lang === "bn" ? "সক্রিয় বিল্ড" : "Active Builds")
+                                        : (lang === "bn" ? "প্রস্তুত" : "Operational")}
+                                </span>
+                            </div>
+                            <p className="mt-1 text-[11px] text-slate-500 truncate">
+                                {lang === "bn" ? "স্বয়ংক্রিয় এআই-ডিএলসি" : "AI-DLC Autonomous pipeline"}
+                            </p>
+                        </div>
+
+                        {/* Metric 4: Credit Balance */}
+                        <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-2xs">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                                    {lang === "bn" ? "ক্রেডিট ব্যালেন্স" : "Credit Balance"}
+                                </span>
+                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+                                    <Coins size={16} />
+                                </div>
+                            </div>
+                            <div className="mt-2 flex items-center justify-between gap-2">
+                                <div className="flex items-baseline gap-1">
+                                    <span className="text-2xl sm:text-3xl font-black text-[#087f79]">
+                                        {Number(user?.credits ?? 0).toLocaleString()}
+                                    </span>
+                                    <span className="text-xs font-semibold text-slate-400">Cr</span>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCreditModal(true)}
+                                    className="px-2.5 py-1 rounded-md text-[11px] font-bold text-[#087f79] bg-teal-50 hover:bg-teal-100 transition-colors cursor-pointer border border-teal-200"
+                                >
+                                    + {lang === "bn" ? "টপ-আপ" : "Top up"}
+                                </button>
+                            </div>
+                            <p className="mt-1 text-[11px] text-slate-500 truncate">
+                                {lang === "bn" ? "প্রতি প্রজেক্ট বিল্ড ১,০০০ ক্রেডিট" : "1,000 credits per build"}
+                            </p>
+                        </div>
                     </div>
 
                     {workspaceProjects.length > 0 ? (
                         <>
-                            <div className="overflow-hidden rounded-xl border border-dudos-border bg-white">
-                                <div className="flex items-center justify-between gap-2 border-b border-dudos-border px-5 py-3">
-                                    <h2 className="text-sm font-semibold text-dudos-text">
-                                        {lang === "bn"
-                                            ? "প্রজেক্ট"
-                                            : "Projects"}
+                            {/* 3. Project Switcher Ribbon */}
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between px-1">
+                                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                                        {lang === "bn" ? "ওয়ার্কস্পেস প্রজেক্টসমূহ" : "Workspace Projects"} ({workspaceProjects.length})
                                     </h2>
-                                    <span className="text-xs text-dudos-text-secondary">
-                                        {workspaceProjects.length}{" "}
-                                        {lang === "bn"
-                                            ? "টি প্রজেক্ট"
-                                            : workspaceProjects.length === 1
-                                              ? "project"
-                                              : "projects"}
+                                    <span className="text-xs text-[#5b6f7b]">
+                                        {lang === "bn" ? "প্রজেক্ট পরিবর্তন করতে ক্লিক করুন" : "Click to switch view"}
                                     </span>
                                 </div>
-                                <ul className="divide-y divide-dudos-border">
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                                     {workspaceProjects.map((project) => {
-                                        const isSelected =
-                                            selectedProject?.id === project.id;
-                                        const stage = projectStage(
-                                            project.status,
-                                        );
+                                        const isSelected = selectedProject?.id === project.id;
+                                        const stage = projectStage(project.status);
+                                        const isLive = project.status === "live" || project.status === "completed";
                                         return (
-                                            <li key={project.id}>
-                                                <button
-                                                    type="button"
-                                                    aria-current={
-                                                        isSelected
-                                                            ? "true"
-                                                            : undefined
-                                                    }
-                                                    onClick={() =>
-                                                        selectProject(project)
-                                                    }
-                                                    className={`flex w-full cursor-pointer items-center gap-3 border-l-2 px-5 py-3 text-left transition-colors ${
-                                                        isSelected
-                                                            ? "border-l-dudos-primary bg-[#edf7f4]"
-                                                            : "border-l-transparent hover:bg-slate-50"
-                                                    }`}
-                                                >
-                                                    <span className="min-w-0 flex-1">
-                                                        <span className="block truncate text-sm font-semibold text-dudos-text">
-                                                            {
-                                                                project.draft
-                                                                    .title
-                                                            }
-                                                        </span>
-                                                        {project.updatedAt && (
-                                                            <span className="block text-xs text-dudos-text-secondary">
-                                                                {lang === "bn"
-                                                                    ? "হালনাগাদ "
-                                                                    : "Updated "}
-                                                                {formatDate(
-                                                                    project.updatedAt,
-                                                                )}
-                                                            </span>
-                                                        )}
-                                                    </span>
-                                                    <Badge
-                                                        variant="outline"
-                                                        className={
-                                                            STAGE_BADGE_CLASSES[
-                                                                stage
-                                                            ]
-                                                        }
-                                                    >
-                                                        {stageLabel(
-                                                            project.status,
-                                                            lang,
-                                                        )}
-                                                    </Badge>
-                                                    <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
-                                                </button>
-                                            </li>
-                                        );
-                                    })}
-                                </ul>
-                            </div>
-
-                            {selectedProject && (
-                                <div className="space-y-5 rounded-xl border border-dudos-border bg-white p-5 sm:p-6">
-                                    <div className="flex flex-wrap items-start justify-between gap-3 border-b border-dudos-border pb-4">
-                                        <div className="min-w-0">
-                                            <p className="text-xs font-medium text-dudos-text-secondary">
-                                                {lang === "bn"
-                                                    ? "নির্বাচিত প্রজেক্ট"
-                                                    : "SELECTED PROJECT"}
-                                            </p>
-                                            <h2 className="mt-1 text-lg font-bold text-dudos-text">
-                                                {selectedProject.draft.title}
-                                            </h2>
-                                            {selectedProject.draft
-                                                .organizationName &&
-                                                selectedProject.draft
-                                                    .organizationName !==
-                                                    selectedProject.draft
-                                                        .title && (
-                                                    <p className="mt-1 text-sm text-dudos-text-secondary">
-                                                        {
-                                                            selectedProject
-                                                                .draft
-                                                                .organizationName
-                                                        }
-                                                    </p>
-                                                )}
-                                        </div>
-                                        <Badge
-                                            variant="outline"
-                                            className={
-                                                STAGE_BADGE_CLASSES[
-                                                    currentStage
-                                                ]
-                                            }
-                                        >
-                                            {stageLabel(currentStatus, lang)}
-                                        </Badge>
-                                    </div>
-
-                                    <details
-                                        open
-                                        className="rounded-lg border border-dudos-border bg-slate-50/70 p-4"
-                                    >
-                                        <summary className="cursor-pointer text-sm font-semibold text-dudos-text">
-                                            {lang === "bn"
-                                                ? "সম্পূর্ণ অ্যাসেসমেন্ট উত্তর"
-                                                : "Full assessment answers"}
-                                        </summary>
-                                        <dl className="mt-4 grid gap-3 sm:grid-cols-2">
-                                            {assessmentFields.map((field) => {
-                                                const value =
-                                                    assessmentAnswers[
-                                                        field.key
-                                                    ]?.trim();
-                                                return (
-                                                    <div
-                                                        key={field.key}
-                                                        className="min-w-0 rounded-md border border-dudos-border bg-white p-3"
-                                                    >
-                                                        <dt className="text-xs font-medium text-dudos-text-secondary">
-                                                            {lang === "bn"
-                                                                ? field.bn
-                                                                : field.label}
-                                                        </dt>
-                                                        <dd className="mt-1 whitespace-pre-wrap break-words text-sm text-dudos-text">
-                                                            {value ||
-                                                                (lang === "bn"
-                                                                    ? "দেওয়া হয়নি"
-                                                                    : "Not supplied")}
-                                                        </dd>
-                                                    </div>
-                                                );
-                                            })}
-                                        </dl>
-                                    </details>
-
-                                    <ol className="grid gap-3 sm:grid-cols-3">
-                                        {journeySteps.map((item, index) => (
-                                            <li
-                                                key={item.title}
-                                                className={`rounded-lg border p-4 ${
-                                                    item.complete
-                                                        ? "border-emerald-200 bg-emerald-50"
-                                                        : item.active
-                                                          ? "border-dudos-primary/30 bg-[#edf7f4]"
-                                                          : "border-slate-200 bg-slate-50"
+                                            <button
+                                                key={project.id}
+                                                type="button"
+                                                onClick={() => selectProject(project)}
+                                                className={`group flex items-start gap-3 p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                                                    isSelected
+                                                        ? "border-[#087f79] bg-[#edf7f4] ring-2 ring-[#087f79]/20 shadow-xs"
+                                                        : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70"
                                                 }`}
                                             >
-                                                <div className="flex items-center gap-2">
-                                                    <span
-                                                        className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
-                                                            item.complete
-                                                                ? "bg-emerald-600 text-white"
-                                                                : item.active
-                                                                  ? "bg-dudos-primary text-white"
-                                                                  : "bg-slate-200 text-slate-600"
-                                                        }`}
-                                                    >
-                                                        {item.complete
-                                                            ? "✓"
-                                                            : index + 1}
-                                                    </span>
-                                                    <strong className="text-sm text-dudos-text">
-                                                        {item.title}
-                                                    </strong>
+                                                <div
+                                                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg font-bold text-xs uppercase ${
+                                                        isSelected
+                                                            ? "bg-[#087f79] text-white"
+                                                            : "bg-slate-100 text-[#087f79] group-hover:bg-teal-50"
+                                                    }`}
+                                                >
+                                                    {project.draft.title.slice(0, 2) || "PR"}
                                                 </div>
-                                                <p className="mt-2 pl-8 text-xs text-dudos-text-secondary">
-                                                    {item.detail}
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-center justify-between gap-1">
+                                                        <h3 className={`text-xs font-bold truncate ${isSelected ? "text-[#087f79]" : "text-[#162c38]"}`}>
+                                                            {project.draft.title}
+                                                        </h3>
+                                                        {isLive && (
+                                                            <span className="flex h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
+                                                        )}
+                                                    </div>
+                                                    <p className="text-[11px] text-slate-400 truncate mt-0.5">
+                                                        {project.draft.businessDomain || project.draft.organizationName || "Transformation Project"}
+                                                    </p>
+                                                    <div className="mt-2 flex items-center justify-between">
+                                                        <Badge
+                                                            variant="outline"
+                                                            className={`text-[10px] px-1.5 py-0 h-4 ${STAGE_BADGE_CLASSES[stage]}`}
+                                                        >
+                                                            {stageLabel(project.status, lang)}
+                                                        </Badge>
+                                                        {project.updatedAt && (
+                                                            <span className="text-[10px] text-slate-400 font-mono">
+                                                                {formatDate(project.updatedAt)}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+
+                                    {/* Quick New Project Card */}
+                                    <button
+                                        type="button"
+                                        onClick={() => onOpenAssessment?.("new")}
+                                        className="flex items-center justify-center gap-2 p-3.5 rounded-xl border border-dashed border-slate-300 bg-slate-50/50 hover:bg-teal-50/40 hover:border-teal-300 text-slate-500 hover:text-[#087f79] transition-all cursor-pointer min-h-[80px]"
+                                    >
+                                        <Plus size={16} />
+                                        <span className="text-xs font-bold">
+                                            {lang === "bn" ? "+ নতুন প্রজেক্ট" : "+ New Project"}
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* 4. Active Project Command Center */}
+                            {selectedProject && (
+                                <div className="space-y-6 rounded-2xl border border-slate-200 bg-white p-5 sm:p-7 shadow-xs">
+                                    {/* Command Center Hero Header */}
+                                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+                                        <div className="space-y-1">
+                                            <div className="flex items-center gap-2">
+                                                <Badge
+                                                    variant="outline"
+                                                    className={`text-xs font-semibold ${STAGE_BADGE_CLASSES[currentStage]}`}
+                                                >
+                                                    {stageLabel(currentStatus, lang)}
+                                                </Badge>
+                                                {selectedProject.draft.businessDomain && (
+                                                    <Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-600 text-xs font-normal">
+                                                        {selectedProject.draft.businessDomain}
+                                                    </Badge>
+                                                )}
+                                                {selectedProject.updatedAt && (
+                                                    <span className="text-xs text-slate-400 flex items-center gap-1 font-mono">
+                                                        <Clock size={12} />
+                                                        {formatDate(selectedProject.updatedAt)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <h2 className="text-xl sm:text-2xl font-black text-[#162c38]">
+                                                {selectedProject.draft.title}
+                                            </h2>
+                                            {selectedProject.draft.organizationName && (
+                                                <p className="text-xs sm:text-sm text-[#5b6f7b] flex items-center gap-1.5">
+                                                    <Building2 size={14} className="text-[#087f79]" />
+                                                    {selectedProject.draft.organizationName}
                                                 </p>
-                                            </li>
-                                        ))}
-                                    </ol>
+                                            )}
+                                        </div>
 
-                                    <BuildProgress
-                                        build={selectedProject.draft.build}
-                                        previewUrl={
-                                            selectedProject.draft.previewUrl
-                                        }
-                                        projectId={selectedProject.ids.find((id) => id.startsWith("cproj_"))}
-                                        lang={lang}
-                                    />
+                                        {/* Direct Quick Launch Actions */}
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            {selectedProject.draft.liveUrl && (
+                                                <a
+                                                    href={selectedProject.draft.liveUrl}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-emerald-700 shadow-2xs transition-colors"
+                                                >
+                                                    <Globe size={14} />
+                                                    {lang === "bn" ? "লাইভ সাইট দেখুন" : "Visit Live Site"}
+                                                    <ExternalLink size={12} />
+                                                </a>
+                                            )}
+                                            {selectedProject.draft.previewUrl && (
+                                                <a
+                                                    href={selectedProject.draft.previewUrl}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="inline-flex items-center gap-1.5 rounded-lg border border-teal-200 bg-teal-50 px-3.5 py-2 text-xs font-bold text-[#087f79] hover:bg-teal-100 transition-colors"
+                                                >
+                                                    <Laptop size={14} />
+                                                    {lang === "bn" ? "প্রিভিউ দেখুন" : "Open Preview"}
+                                                    <ExternalLink size={12} />
+                                                </a>
+                                            )}
+                                            {renderPanelActions(selectedProject)}
+                                        </div>
+                                    </div>
 
-                                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-dudos-border pt-4">
-                                        <p className="text-sm text-dudos-text-secondary">
-                                            {stageMessage}
-                                        </p>
-                                        {renderPanelActions(selectedProject)}
+                                    {/* Visual Journey Pipeline */}
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                                                {lang === "bn" ? "ডেলিভারি পাইপলাইন অগ্রগতি" : "Delivery Journey Pipeline"}
+                                            </span>
+                                            <span className="text-xs text-[#087f79] font-bold">
+                                                {journeySteps.filter((s) => s.complete).length} / {journeySteps.length} {lang === "bn" ? "সম্পন্ন" : "Milestones"}
+                                            </span>
+                                        </div>
+                                        <ol className="grid gap-3 sm:grid-cols-3">
+                                            {journeySteps.map((item, index) => (
+                                                <li
+                                                    key={item.title}
+                                                    className={`rounded-xl border p-4 transition-colors ${
+                                                        item.complete
+                                                            ? "border-emerald-200 bg-emerald-50/70"
+                                                            : item.active
+                                                              ? "border-[#087f79] bg-[#edf7f4] ring-1 ring-[#087f79]"
+                                                              : "border-slate-200 bg-slate-50/60"
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center gap-2.5">
+                                                        <span
+                                                            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${
+                                                                item.complete
+                                                                    ? "bg-emerald-600 text-white shadow-2xs"
+                                                                    : item.active
+                                                                      ? "bg-[#087f79] text-white shadow-2xs"
+                                                                      : "bg-slate-200 text-slate-600"
+                                                            }`}
+                                                        >
+                                                            {item.complete ? <Check size={14} /> : index + 1}
+                                                        </span>
+                                                        <strong className="text-xs sm:text-sm font-bold text-[#162c38]">
+                                                            {item.title}
+                                                        </strong>
+                                                    </div>
+                                                    <p className="mt-2 pl-9.5 text-xs text-[#5b6f7b] leading-relaxed">
+                                                        {item.detail}
+                                                    </p>
+                                                </li>
+                                            ))}
+                                        </ol>
+                                    </div>
+
+                                    {/* Next Action Callout Banner */}
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-teal-200 bg-gradient-to-r from-teal-50/80 to-white text-[#162c38]">
+                                        <div className="flex items-start sm:items-center gap-3">
+                                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#087f79] text-white">
+                                                <Rocket size={17} />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-semibold uppercase tracking-wider text-[#087f79]">
+                                                    {lang === "bn" ? "পরবর্তী করণীয়" : "Next Recommended Action"}
+                                                </p>
+                                                <p className="text-xs sm:text-sm text-[#162c38] mt-0.5 font-medium">
+                                                    {stageMessage}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="shrink-0">
+                                            {renderPanelActions(selectedProject)}
+                                        </div>
+                                    </div>
+
+                                    {/* Build Engine Realtime Progress Tracker (if build exists) */}
+                                    {selectedProject.draft.build && (
+                                        <div className="space-y-2 pt-2">
+                                            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                                                {lang === "bn" ? "এআই বিল্ড স্ট্যাটাস" : "AI Build Engine Status"}
+                                            </span>
+                                            <BuildProgress
+                                                build={selectedProject.draft.build}
+                                                previewUrl={selectedProject.draft.previewUrl}
+                                                projectId={selectedProject.ids.find((id) => id.startsWith("cproj_"))}
+                                                lang={lang}
+                                            />
+                                        </div>
+                                    )}
+
+                                    {/* 5. Organized Specifications Tabs */}
+                                    <div className="space-y-4 pt-4 border-t border-slate-100">
+                                        <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setOverviewSpecTab("blueprint")}
+                                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                                                    overviewSpecTab === "blueprint"
+                                                        ? "bg-[#087f79] text-white shadow-2xs"
+                                                        : "text-slate-600 hover:bg-slate-100"
+                                                }`}
+                                            >
+                                                <Sliders size={13} />
+                                                {lang === "bn" ? "আর্কিটেকচার ও ব্লুপ্রিন্ট" : "Architecture & Specs"}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setOverviewSpecTab("answers")}
+                                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                                                    overviewSpecTab === "answers"
+                                                        ? "bg-[#087f79] text-white shadow-2xs"
+                                                        : "text-slate-600 hover:bg-slate-100"
+                                                }`}
+                                            >
+                                                <FileText size={13} />
+                                                {lang === "bn" ? "অ্যাসেসমেন্ট উত্তরসমূহ" : "Full Assessment Answers"}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setOverviewSpecTab("billing")}
+                                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                                                    overviewSpecTab === "billing"
+                                                        ? "bg-[#087f79] text-white shadow-2xs"
+                                                        : "text-slate-600 hover:bg-slate-100"
+                                                }`}
+                                            >
+                                                <CreditCard size={13} />
+                                                {lang === "bn" ? "পেমেন্ট ও ইনভয়েস" : "Payment & Billing"}
+                                            </button>
+                                        </div>
+
+                                        {/* Tab 1: Architecture & Specs */}
+                                        {overviewSpecTab === "blueprint" && (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                                <div className="rounded-xl border border-slate-200 bg-[#f8fafb] p-3.5">
+                                                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                                                        {lang === "bn" ? "টার্গেট টেক স্ট্যাক" : "Target Tech Stack"}
+                                                    </span>
+                                                    <p className="text-xs font-bold text-[#162c38] mt-1 font-mono">
+                                                        {selectedProject.draft.targetStack || "Next.js 16 + FastAPI + PostgreSQL"}
+                                                    </p>
+                                                </div>
+
+                                                <div className="rounded-xl border border-slate-200 bg-[#f8fafb] p-3.5">
+                                                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                                                        {lang === "bn" ? "ডেটাবেস ইঞ্জিন" : "Database Engine"}
+                                                    </span>
+                                                    <p className="text-xs font-bold text-[#162c38] mt-1 font-mono">
+                                                        {selectedProject.draft.qaAnswers?.databaseChoice || "PostgreSQL 16 with RLS"}
+                                                    </p>
+                                                </div>
+
+                                                <div className="rounded-xl border border-slate-200 bg-[#f8fafb] p-3.5">
+                                                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                                                        {lang === "bn" ? "মাল্টি-টেন্যান্সি" : "Multi-Tenancy Isolation"}
+                                                    </span>
+                                                    <p className="text-xs font-bold text-[#162c38] mt-1">
+                                                        {selectedProject.draft.qaAnswers?.multiTenant === "yes"
+                                                            ? (lang === "bn" ? "সক্রিয় (RLS ডেটা আইসোলেশন)" : "Enabled (Tenant Data Isolation with RLS)")
+                                                            : (lang === "bn" ? "ডেডিকেটেড সিঙ্গেল টেন্যান্ট" : "Single-Tenant Dedicated")}
+                                                    </p>
+                                                </div>
+
+                                                <div className="rounded-xl border border-slate-200 bg-[#f8fafb] p-3.5">
+                                                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                                                        {lang === "bn" ? "পেমেন্ট গেটওয়ে" : "Payment Gateway"}
+                                                    </span>
+                                                    <p className="text-xs font-bold text-[#162c38] mt-1">
+                                                        {selectedProject.draft.qaAnswers?.paymentGateway || "Standard Online Gateway (PayStation)"}
+                                                    </p>
+                                                </div>
+
+                                                <div className="rounded-xl border border-slate-200 bg-[#f8fafb] p-3.5">
+                                                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                                                        {lang === "bn" ? "বাজেট ও সময়সীমা" : "Budget & Timeline"}
+                                                    </span>
+                                                    <p className="text-xs font-bold text-[#162c38] mt-1">
+                                                        {selectedProject.draft.budgetExpectation || "Standard Build"} · {selectedProject.draft.expectedTimeline || "4-8 Weeks"}
+                                                    </p>
+                                                </div>
+
+                                                <div className="rounded-xl border border-slate-200 bg-[#f8fafb] p-3.5">
+                                                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                                                        {lang === "bn" ? "ওয়েবসাইট রেফারেন্স" : "Website Reference"}
+                                                    </span>
+                                                    <p className="text-xs font-mono text-[#087f79] mt-1 truncate">
+                                                        {selectedProject.draft.siteUrl || "None provided"}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Tab 2: Assessment Answers */}
+                                        {overviewSpecTab === "answers" && (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-1">
+                                                {assessmentFields.map((field) => {
+                                                    const value = assessmentAnswers[field.key]?.trim();
+                                                    return (
+                                                        <div
+                                                            key={field.key}
+                                                            className="rounded-xl border border-slate-200 bg-[#f8fafb] p-3"
+                                                        >
+                                                            <dt className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                                                {lang === "bn" ? field.bn : field.label}
+                                                            </dt>
+                                                            <dd className="mt-1 whitespace-pre-wrap break-words text-xs text-[#162c38] font-medium">
+                                                                {value || (lang === "bn" ? "দেওয়া হয়নি" : "Not supplied")}
+                                                            </dd>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+
+                                        {/* Tab 3: Billing & Invoices */}
+                                        {overviewSpecTab === "billing" && (
+                                            <div className="rounded-xl border border-slate-200 bg-[#f8fafb] p-4 text-xs space-y-3">
+                                                <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                                                    <span className="font-semibold text-slate-500">
+                                                        {lang === "bn" ? "পেমেন্ট স্ট্যাটাস" : "Payment Status"}
+                                                    </span>
+                                                    <Badge variant="outline" className={selectedProject.payment ? "bg-emerald-50 text-emerald-800 border-emerald-300" : "bg-amber-50 text-amber-800 border-amber-300"}>
+                                                        {selectedProject.payment ? (lang === "bn" ? "পরিশোধিত" : "Paid") : (lang === "bn" ? "বাকি" : "Pending")}
+                                                    </Badge>
+                                                </div>
+                                                {selectedProject.payment ? (
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <div>
+                                                            <span className="text-slate-400">{lang === "bn" ? "প্যাকেজ:" : "Package:"}</span>
+                                                            <p className="font-bold text-[#162c38] mt-0.5">{selectedProject.payment.packageName || "Standard build"}</p>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-slate-400">{lang === "bn" ? "চার্জকৃত ক্রেডিট:" : "Charged:"}</span>
+                                                            <p className="font-bold text-[#087f79] mt-0.5">{selectedProject.payment.credits || BUILD_PACKAGE_CREDITS} Credits</p>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-slate-400">{lang === "bn" ? "পেমেন্টের তারিখ:" : "Paid At:"}</span>
+                                                            <p className="text-slate-700 mt-0.5 font-mono">{formatDate(selectedProject.payment.paidAt)}</p>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center justify-between">
+                                                        <p className="text-slate-600">
+                                                            {lang === "bn" ? "এই প্রজেক্টের জন্য ১,০০০ ক্রেডিট পেমেন্ট বাকি আছে।" : "This project requires 1,000 credits to dispatch the AI builder."}
+                                                        </p>
+                                                        <Button size="sm" onClick={() => openPayment(selectedProject)} className="bg-[#087f79] text-white">
+                                                            <CreditCard size={13} className="mr-1" />
+                                                            {lang === "bn" ? "পেমেন্ট করুন" : "Pay now"}
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             )}
                         </>
                     ) : (
-                        <div className="rounded-xl border border-dashed border-dudos-border bg-white p-8 text-center">
-                            <h2 className="text-lg font-semibold text-dudos-text">
+                        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
+                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-50 text-[#087f79]">
+                                <FolderKanban size={24} />
+                            </div>
+                            <h2 className="mt-4 text-lg font-bold text-[#162c38]">
                                 {lang === "bn"
                                     ? "এখনও কোনো প্রজেক্ট নেই"
-                                    : "No projects yet"}
+                                    : "No projects in this workspace yet"}
                             </h2>
-                            <p className="mx-auto mt-2 max-w-xl text-sm text-dudos-text-secondary">
+                            <p className="mx-auto mt-2 max-w-md text-sm text-[#5b6f7b]">
                                 {lang === "bn"
-                                    ? "একটি অ্যাসেসমেন্ট দিয়ে শুরু করুন। খসড়া ও জমা দেওয়া সব প্রজেক্ট এখানে দেখাবে।"
-                                    : "Start with an assessment. All of your draft and submitted projects will be listed here."}
+                                    ? "একটি অ্যাসেসমেন্ট দিয়ে শুরু করুন। খসড়া ও জমা দেওয়া সব প্রজেক্ট এখানে স্বয়ংক্রিয়ভাবে দেখাবে।"
+                                    : "Start with a guided assessment. Your specifications, payment receipts, and automated builds will appear right here."}
                             </p>
                             <Button
-                                className="mt-4"
+                                className="mt-5 bg-[#087f79] hover:bg-[#076e68] text-white font-bold cursor-pointer"
                                 onClick={() => onOpenAssessment?.("new")}
                             >
+                                <Plus size={16} className="mr-1" />
                                 {lang === "bn"
-                                    ? "অ্যাসেসমেন্ট শুরু করুন"
-                                    : "Start assessment"}
+                                    ? "নতুন অ্যাসেসমেন্ট শুরু করুন"
+                                    : "Start New Assessment"}
                             </Button>
                         </div>
                     )}
@@ -3725,16 +4050,17 @@ ${draft.projectScope}
             {/* 2. Focused Section: My Projects */}
             {activeSection === "projects" && (
                 <section
-                    className="space-y-5"
+                    className="space-y-6"
                     aria-labelledby="my-projects-title"
                 >
+                    {/* Header with Title and Primary New Project Button */}
                     <div className="section-heading">
                         <div>
                             <p className="eyebrow">
                                 <span />
                                 {lang === "bn"
-                                    ? "আপনার প্রজেক্ট"
-                                    : "YOUR PROJECTS"}
+                                    ? "আপনার প্রজেক্ট পোর্টফোলিও"
+                                    : "PROJECT PORTFOLIO"}
                             </p>
                             <h1 id="my-projects-title">
                                 {lang === "bn"
@@ -3743,46 +4069,138 @@ ${draft.projectScope}
                             </h1>
                             <p>
                                 {lang === "bn"
-                                    ? "প্রতিটি প্রজেক্টের অগ্রগতি, পেমেন্ট ও ডেলিভারির তথ্য এক জায়গায়।"
-                                    : "Progress, payment and delivery details for every project in this workspace."}
+                                    ? "প্রতিটি প্রজেক্টের লাইভ স্ট্যাটাস, এআই সিন্থেসিস পাইপলাইন, পেমেন্ট ও ডেলিভারি তথ্য।"
+                                    : "Monitor live production deployments, AI code generation progress, milestone payments, and tech specifications."}
                             </p>
                         </div>
                         <Button
                             size="sm"
                             onClick={() => onOpenAssessment?.("new")}
+                            className="bg-[#087f79] hover:bg-[#066762] text-white text-xs font-semibold shadow-xs flex items-center gap-1.5"
                         >
-                            <Plus className="mr-1 h-4 w-4" />
-                            {lang === "bn"
-                                ? "নতুন অ্যাসেসমেন্ট"
-                                : "New assessment"}
+                            <Plus className="h-4 w-4" />
+                            <span>
+                                {lang === "bn"
+                                    ? "নতুন প্রজেক্ট অ্যাসেসমেন্ট"
+                                    : "New Project Assessment"}
+                            </span>
                         </Button>
                     </div>
 
                     {workspaceProjects.length === 0 ? (
-                        <div className="rounded-xl border border-dashed border-dudos-border bg-white p-8 text-center">
-                            <FolderKanban className="mx-auto h-8 w-8 text-dudos-text-secondary" />
-                            <h2 className="mt-3 text-lg font-semibold text-dudos-text">
-                                {lang === "bn"
-                                    ? "এখনও কোনো প্রজেক্ট নেই"
-                                    : "No projects yet"}
-                            </h2>
-                            <p className="mx-auto mt-2 max-w-md text-sm text-dudos-text-secondary">
-                                {lang === "bn"
-                                    ? "একটি অ্যাসেসমেন্ট দিয়ে আপনার প্রথম প্রজেক্ট শুরু করুন।"
-                                    : "Start an assessment to create your first project."}
-                            </p>
+                        <div className="rounded-2xl border border-dashed border-[#c2e2dc] bg-[#f8fbfb] p-10 text-center space-y-4">
+                            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#edf7f4] text-[#087f79] border border-[#c2e2dc]">
+                                <FolderKanban className="h-7 w-7" />
+                            </div>
+                            <div className="space-y-1">
+                                <h2 className="text-lg font-bold text-[#162c38]">
+                                    {lang === "bn"
+                                        ? "এখনও কোনো প্রজেক্ট তৈরি হয়নি"
+                                        : "No projects in this workspace yet"}
+                                </h2>
+                                <p className="mx-auto max-w-md text-xs text-[#5b6f7b] leading-relaxed">
+                                    {lang === "bn"
+                                        ? "একটি ৩-মিনিটের ইন্টারেক্টিভ অ্যাসেসমেন্ট দিয়ে আপনার ওয়েব অ্যাপ্লিকেশন বা সিস্টেম শুরু করুন। এআই ইঞ্জিন আপনার আর্কিটেকচার তৈরি করবে।"
+                                        : "Launch your custom web or mobile application with our AI Specification Studio. We'll generate your technical blueprint, estimate timeline, and begin synthesis."}
+                                </p>
+                            </div>
                             <Button
-                                className="mt-4"
                                 onClick={() => onOpenAssessment?.("new")}
+                                className="bg-[#087f79] hover:bg-[#066762] text-white text-xs font-semibold px-5 shadow-xs"
                             >
-                                {lang === "bn"
-                                    ? "অ্যাসেসমেন্ট শুরু করুন"
-                                    : "Start assessment"}
+                                <Plus className="mr-1.5 h-4 w-4" />
+                                <span>
+                                    {lang === "bn"
+                                        ? "প্রথম অ্যাসেসমেন্ট শুরু করুন"
+                                        : "Start First Project Assessment"}
+                                </span>
                             </Button>
                         </div>
                     ) : (
                         <>
-                            <div className="flex flex-wrap items-center justify-between gap-3">
+                            {/* Executive Metric Cards Strip */}
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                                <div className="rounded-2xl border border-[#dce5e9] bg-white p-4 shadow-xs">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[11px] font-bold uppercase tracking-wider text-[#5b6f7b]">
+                                            {lang === "bn" ? "মোট প্রজেক্ট" : "Total Projects"}
+                                        </span>
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
+                                            <FolderKanban className="h-4 w-4" />
+                                        </div>
+                                    </div>
+                                    <div className="mt-2 flex items-baseline gap-2">
+                                        <span className="text-2xl font-black text-[#162c38] font-mono">
+                                            {workspaceProjects.length}
+                                        </span>
+                                        <span className="text-[11px] text-[#5b6f7b]">
+                                            {lang === "bn" ? "এই ওয়ার্কস্পেসে" : "in workspace"}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-4 shadow-xs">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800">
+                                            {lang === "bn" ? "লাইভ সাইট" : "Live Production"}
+                                        </span>
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                                            <Globe className="h-4 w-4" />
+                                        </div>
+                                    </div>
+                                    <div className="mt-2 flex items-baseline gap-2">
+                                        <span className="text-2xl font-black text-emerald-800 font-mono">
+                                            {workspaceProjects.filter((p) => p.status === "live" || p.status === "completed" || Boolean(p.draft.liveUrl)).length}
+                                        </span>
+                                        <span className="flex items-center gap-1 text-[11px] font-medium text-emerald-700">
+                                            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                                            {lang === "bn" ? "হোস্টেড ও সক্রিয়" : "Active VPS"}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="rounded-2xl border border-teal-200 bg-teal-50/50 p-4 shadow-xs">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[11px] font-bold uppercase tracking-wider text-teal-800">
+                                            {lang === "bn" ? "এআই সিন্থেসিস" : "In Development"}
+                                        </span>
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-teal-100 text-teal-700">
+                                            <Code2 className="h-4 w-4" />
+                                        </div>
+                                    </div>
+                                    <div className="mt-2 flex items-baseline gap-2">
+                                        <span className="text-2xl font-black text-teal-800 font-mono">
+                                            {workspaceProjects.filter((p) => ["submitted", "in_development", "deploying"].includes(p.status)).length}
+                                        </span>
+                                        <span className="text-[11px] text-teal-700 font-medium">
+                                            {lang === "bn" ? "বিল্ড ও ডিপ্লয়" : "Code generation"}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 shadow-xs">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800">
+                                            {lang === "bn" ? "পদক্ষেপ বাকি" : "Action Needed"}
+                                        </span>
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+                                            <AlertCircle className="h-4 w-4" />
+                                        </div>
+                                    </div>
+                                    <div className="mt-2 flex items-baseline gap-2">
+                                        <span className="text-2xl font-black text-amber-800 font-mono">
+                                            {workspaceProjects.filter((p) => ["draft", "payment", "ready"].includes(projectStage(p.status))).length}
+                                        </span>
+                                        <span className="text-[11px] text-amber-700 font-medium">
+                                            {lang === "bn" ? "খসড়া / পেমেন্ট" : "Draft / Payment"}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Toolbar: Stage Filters + Search + Sort + View Toggle */}
+                            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-[#dce5e9] shadow-xs">
+                                {/* Stage Filter Pills */}
                                 <div
                                     className="flex flex-wrap gap-1.5"
                                     role="tablist"
@@ -3813,21 +4231,23 @@ ${draft.projectScope}
                                                 onClick={() =>
                                                     setProjectFilter(filter.id)
                                                 }
-                                                className={`cursor-pointer rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                                                className={`cursor-pointer rounded-xl px-3 py-1.5 text-xs font-semibold transition-all flex items-center gap-1.5 ${
                                                     isActive
-                                                        ? "border-dudos-primary bg-dudos-primary text-white"
-                                                        : "border-dudos-border bg-white text-dudos-text-secondary hover:bg-slate-50"
+                                                        ? "bg-[#087f79] text-white shadow-xs"
+                                                        : "border border-[#dce5e9] bg-white text-[#5b6f7b] hover:bg-[#f8fafb]"
                                                 }`}
                                             >
-                                                {lang === "bn"
-                                                    ? filter.bn
-                                                    : filter.en}{" "}
+                                                <span>
+                                                    {lang === "bn"
+                                                        ? filter.bn
+                                                        : filter.en}
+                                                </span>
                                                 <span
-                                                    className={
+                                                    className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
                                                         isActive
-                                                            ? "text-white/80"
-                                                            : "text-slate-400"
-                                                    }
+                                                            ? "bg-white/25 text-white"
+                                                            : "bg-slate-100 text-[#5b6f7b]"
+                                                    }`}
                                                 >
                                                     {count}
                                                 </span>
@@ -3835,311 +4255,693 @@ ${draft.projectScope}
                                         );
                                     })}
                                 </div>
-                                <div className="relative w-full sm:w-64">
-                                    <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-                                    <Input
-                                        placeholder={
-                                            lang === "bn"
-                                                ? "প্রজেক্ট খুঁজুন…"
-                                                : "Search projects…"
-                                        }
-                                        value={projectSearch}
-                                        onChange={(e) =>
-                                            setProjectSearch(e.target.value)
-                                        }
-                                        className="h-8 bg-white pl-8 text-xs"
-                                    />
+
+                                {/* Right Toolbar: Search + Sort + View Mode Switcher */}
+                                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                                    {/* Search input with clear button */}
+                                    <div className="relative flex-1 sm:w-60 min-w-[180px]">
+                                        <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                                        <Input
+                                            placeholder={
+                                                lang === "bn"
+                                                    ? "প্রজেক্ট খুঁজুন…"
+                                                    : "Search projects…"
+                                            }
+                                            value={projectSearch}
+                                            onChange={(e) =>
+                                                setProjectSearch(e.target.value)
+                                            }
+                                            className="h-8 bg-[#f8fafb] pl-8 pr-7 text-xs border-[#dce5e9] focus:bg-white transition-colors"
+                                        />
+                                        {projectSearch && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setProjectSearch("")}
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                            >
+                                                <X className="h-3.5 w-3.5" />
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* Sort Dropdown */}
+                                    <div className="flex items-center gap-1">
+                                        <select
+                                            value={projectSortBy}
+                                            onChange={(e) =>
+                                                setProjectSortBy(
+                                                    e.target.value as "updated" | "name" | "status",
+                                                )
+                                            }
+                                            className="h-8 rounded-lg border border-[#dce5e9] bg-[#f8fafb] px-2 text-xs font-medium text-[#162c38] focus:outline-none focus:border-[#087f79]"
+                                            aria-label="Sort projects"
+                                        >
+                                            <option value="updated">
+                                                {lang === "bn"
+                                                    ? "সর্বশেষ হালনাগাদ"
+                                                    : "Recently Updated"}
+                                            </option>
+                                            <option value="name">
+                                                {lang === "bn"
+                                                    ? "নাম (A-Z)"
+                                                    : "Project Name (A-Z)"}
+                                            </option>
+                                            <option value="status">
+                                                {lang === "bn"
+                                                    ? "পর্যায় / অবস্থা"
+                                                    : "Stage / Status"}
+                                            </option>
+                                        </select>
+                                    </div>
+
+                                    {/* View Mode Toggle */}
+                                    <div className="flex items-center rounded-lg border border-[#dce5e9] bg-[#f8fafb] p-0.5">
+                                        <button
+                                            type="button"
+                                            onClick={() => setProjectsViewMode("grid")}
+                                            className={`p-1.5 rounded-md transition-colors ${
+                                                projectsViewMode === "grid"
+                                                    ? "bg-[#087f79] text-white shadow-xs"
+                                                    : "text-[#5b6f7b] hover:text-[#162c38]"
+                                            }`}
+                                            title="Grid View"
+                                        >
+                                            <LayoutGrid className="h-3.5 w-3.5" />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setProjectsViewMode("list")}
+                                            className={`p-1.5 rounded-md transition-colors ${
+                                                projectsViewMode === "list"
+                                                    ? "bg-[#087f79] text-white shadow-xs"
+                                                    : "text-[#5b6f7b] hover:text-[#162c38]"
+                                            }`}
+                                            title="List / Table View"
+                                        >
+                                            <List className="h-3.5 w-3.5" />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
-                            {filteredProjects.length === 0 ? (
-                                <p className="rounded-xl border border-dashed border-dudos-border bg-white p-6 text-center text-sm text-dudos-text-secondary">
-                                    {lang === "bn"
-                                        ? "এই ফিল্টারে কোনো প্রজেক্ট নেই।"
-                                        : "No projects match this filter."}
-                                </p>
-                            ) : (
-                                <ul className="space-y-4">
-                                    {filteredProjects.map((project) => {
-                                        const stage = projectStage(
-                                            project.status,
-                                        );
-                                        const reached = buildProgress(
-                                            project.status,
-                                        );
+                            {/* No matching results state */}
+                            {sortedProjects.length === 0 ? (
+                                <div className="rounded-2xl border border-dashed border-[#dce5e9] bg-white p-8 text-center space-y-3">
+                                    <Search className="h-8 w-8 text-slate-300 mx-auto" />
+                                    <p className="text-sm font-semibold text-[#162c38]">
+                                        {lang === "bn"
+                                            ? "কোনো প্রজেক্ট মেলেনি"
+                                            : "No projects match this filter"}
+                                    </p>
+                                    <p className="text-xs text-[#5b6f7b] max-w-sm mx-auto">
+                                        {lang === "bn"
+                                            ? "আপনার সার্চ শব্দ বা স্টেজ ফিল্টার পরিবর্তন করে দেখুন।"
+                                            : "Try adjusting your search query or reset the stage filter to view all workspace projects."}
+                                    </p>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => {
+                                            setProjectFilter("all");
+                                            setProjectSearch("");
+                                        }}
+                                        className="text-xs font-semibold border-[#dce5e9]"
+                                    >
+                                        {lang === "bn"
+                                            ? "ফিল্টার রিসেট করুন"
+                                            : "Reset Filters"}
+                                    </Button>
+                                </div>
+                            ) : projectsViewMode === "grid" ? (
+                                /* GRID VIEW */
+                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                                    {sortedProjects.map((project) => {
+                                        const stage = projectStage(project.status);
+                                        const reached = buildProgress(project.status);
                                         const draft = project.draft;
-                                        const na = (
-                                            <span className="text-slate-400">
-                                                {lang === "bn"
-                                                    ? "পরে জানানো হবে"
-                                                    : "Shared later"}
-                                            </span>
-                                        );
-                                        const details: [
-                                            string,
-                                            React.ReactNode,
-                                        ][] = [
-                                            [
-                                                lang === "bn"
-                                                    ? "পেমেন্ট"
-                                                    : "Payment",
-                                                project.payment ? (
-                                                    `${project.payment.packageName ? `${project.payment.packageName} · ` : ""}${Number(project.payment.credits || BUILD_PACKAGE_CREDITS).toLocaleString()} ${unitLabel(project.payment.unit, lang)} · ${formatDate(project.payment.paidAt)}`
-                                                ) : project.invoice?.status ===
-                                                  "paid" ? (
-                                                    `৳${Number(project.invoice.totalQuotationBDT || 0).toLocaleString()} ${lang === "bn" ? "পরিশোধিত" : "paid"}`
-                                                ) : stage === "draft" ? (
-                                                    <span className="text-slate-400">
-                                                        {lang === "bn"
-                                                            ? "অ্যাসেসমেন্টের পর"
-                                                            : "After assessment"}
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-amber-700">
-                                                        {lang === "bn"
-                                                            ? "বাকি"
-                                                            : "Due"}
-                                                    </span>
-                                                ),
-                                            ],
-                                            [
-                                                lang === "bn"
-                                                    ? "বিল্ডারে জমা"
-                                                    : "Submitted to builder",
-                                                draft.builderSubmittedAt ? (
-                                                    formatDate(
-                                                        draft.builderSubmittedAt,
-                                                    )
-                                                ) : (
-                                                    <span className="text-slate-400">
-                                                        —
-                                                    </span>
-                                                ),
-                                            ],
-                                            [
-                                                lang === "bn"
-                                                    ? "প্রিভিউ"
-                                                    : "Preview",
-                                                draft.previewUrl ? (
-                                                    <a
-                                                        href={draft.previewUrl}
-                                                        target="_blank"
-                                                        rel="noreferrer"
-                                                        className="text-link"
-                                                    >
-                                                        {lang === "bn"
-                                                            ? "প্রিভিউ দেখুন"
-                                                            : "Open preview"}
-                                                        <ExternalLink className="h-3 w-3" />
-                                                    </a>
-                                                ) : (
-                                                    na
-                                                ),
-                                            ],
-                                            [
-                                                lang === "bn"
-                                                    ? "লাইভ সাইট"
-                                                    : "Live site",
-                                                draft.liveUrl ? (
-                                                    <a
-                                                        href={draft.liveUrl}
-                                                        target="_blank"
-                                                        rel="noreferrer"
-                                                        className="text-link"
-                                                    >
-                                                        {draft.domainName ||
-                                                            draft.liveUrl}
-                                                        <ExternalLink className="h-3 w-3" />
-                                                    </a>
-                                                ) : (
-                                                    na
-                                                ),
-                                            ],
-                                        ];
+                                        const isExpanded = Boolean(expandedProjectDetails[project.id]);
+                                        const isLive = project.status === "live" || project.status === "completed" || Boolean(draft.liveUrl);
 
                                         return (
-                                            <li
+                                            <div
                                                 key={project.id}
-                                                className="rounded-xl border border-dudos-border bg-white p-5"
+                                                className="group rounded-2xl border border-[#dce5e9] bg-white p-5 shadow-xs hover:shadow-md hover:border-[#087f79]/40 transition-all duration-200 flex flex-col justify-between"
                                             >
-                                                <div className="flex flex-wrap items-start justify-between gap-3">
-                                                    <div className="min-w-0">
-                                                        <h2 className="truncate text-base font-bold text-dudos-text">
-                                                            {draft.title}
-                                                        </h2>
-                                                        <p className="mt-0.5 text-xs text-dudos-text-secondary">
+                                                {/* Top Meta Row */}
+                                                <div>
+                                                    <div className="flex items-center justify-between gap-2 pb-3 border-b border-[#f0f4f7]">
+                                                        {/* Stage Status Badge */}
+                                                        {isLive ? (
+                                                            <Badge className="bg-emerald-50 text-emerald-800 border-emerald-300 font-semibold text-[11px] py-0.5 px-2.5 flex items-center gap-1.5">
+                                                                <span className="relative flex h-2 w-2">
+                                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                                                </span>
+                                                                <span>{lang === "bn" ? "লাইভ সাইট" : "Live Production"}</span>
+                                                            </Badge>
+                                                        ) : stage === "ready" ? (
+                                                            <Badge className="bg-sky-50 text-sky-800 border-sky-300 font-semibold text-[11px] py-0.5 px-2.5 flex items-center gap-1.5">
+                                                                <Rocket className="h-3 w-3 text-sky-600" />
+                                                                <span>{stageLabel(project.status, lang)}</span>
+                                                            </Badge>
+                                                        ) : stage === "payment" ? (
+                                                            <Badge className="bg-amber-50 text-amber-800 border-amber-300 font-semibold text-[11px] py-0.5 px-2.5 flex items-center gap-1.5">
+                                                                <CreditCard className="h-3 w-3 text-amber-600" />
+                                                                <span>{stageLabel(project.status, lang)}</span>
+                                                            </Badge>
+                                                        ) : stage === "submitted" ? (
+                                                            <Badge className="bg-teal-50 text-teal-800 border-teal-300 font-semibold text-[11px] py-0.5 px-2.5 flex items-center gap-1.5">
+                                                                <RefreshCw className="h-3 w-3 animate-spin text-teal-600" />
+                                                                <span>{stageLabel(project.status, lang)}</span>
+                                                            </Badge>
+                                                        ) : (
+                                                            <Badge className="bg-slate-100 text-slate-700 border-slate-300 font-semibold text-[11px] py-0.5 px-2.5 flex items-center gap-1.5">
+                                                                <Pencil className="h-3 w-3 text-slate-500" />
+                                                                <span>{stageLabel(project.status, lang)}</span>
+                                                            </Badge>
+                                                        )}
+
+                                                        {/* Business Category Pill */}
+                                                        <span className="text-[11px] font-medium text-[#5b6f7b] truncate max-w-[130px] bg-[#f8fafb] px-2 py-0.5 rounded-md border border-[#eef3f6]">
+                                                            {draft.businessDomain || "Custom Web App"}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Project Title & Overview Link */}
+                                                    <div className="pt-3">
+                                                        <h3
+                                                            onClick={() => {
+                                                                selectProject(project);
+                                                                router.push(lang ? `/${lang}/app/overview` : `/app/overview`);
+                                                            }}
+                                                            className="text-base font-bold text-[#162c38] group-hover:text-[#087f79] transition-colors truncate cursor-pointer"
+                                                            title={draft.title}
+                                                        >
+                                                            {draft.title || "Untitled Application"}
+                                                        </h3>
+                                                        <p className="text-xs text-[#5b6f7b] mt-0.5 truncate">
                                                             {[
-                                                                draft.organizationName !==
-                                                                draft.title
-                                                                    ? draft.organizationName
-                                                                    : "",
-                                                                draft.businessDomain,
-                                                                `${lang === "bn" ? "হালনাগাদ" : "Updated"} ${formatDate(project.updatedAt)}`,
+                                                                draft.organizationName !== draft.title ? draft.organizationName : "",
+                                                                draft.targetStack || "Next.js 16 + FastAPI",
                                                             ]
                                                                 .filter(Boolean)
                                                                 .join(" · ")}
                                                         </p>
                                                     </div>
-                                                    <Badge
-                                                        variant="outline"
-                                                        className={
-                                                            STAGE_BADGE_CLASSES[
-                                                                stage
-                                                            ]
-                                                        }
-                                                    >
-                                                        {stageLabel(
-                                                            project.status,
-                                                            lang,
-                                                        )}
-                                                    </Badge>
-                                                </div>
 
-                                                {/* Delivery tracker: assessment → live */}
-                                                <ol className="mt-5 grid grid-cols-5 gap-1">
-                                                    {BUILD_STEPS.map(
-                                                        (step, index) => {
-                                                            const done =
-                                                                index < reached;
-                                                            const current =
-                                                                index ===
-                                                                reached;
-                                                            return (
-                                                                <li
-                                                                    key={
-                                                                        step.en
-                                                                    }
-                                                                    className="min-w-0"
-                                                                    aria-current={
-                                                                        current
-                                                                            ? "step"
-                                                                            : undefined
-                                                                    }
-                                                                >
-                                                                    <div
-                                                                        className={`h-1.5 rounded-full ${
-                                                                            done
-                                                                                ? "bg-emerald-500"
-                                                                                : current
-                                                                                  ? "bg-dudos-primary/40"
-                                                                                  : "bg-slate-200"
-                                                                        }`}
-                                                                    />
-                                                                    <p
-                                                                        className={`mt-1.5 truncate text-[11px] ${
-                                                                            done
-                                                                                ? "font-medium text-emerald-700"
-                                                                                : current
-                                                                                  ? "font-semibold text-dudos-text"
-                                                                                  : "text-slate-400"
-                                                                        }`}
-                                                                    >
-                                                                        {lang ===
-                                                                        "bn"
-                                                                            ? step.bn
-                                                                            : step.en}
-                                                                    </p>
-                                                                </li>
-                                                            );
-                                                        },
-                                                    )}
-                                                </ol>
+                                                    {/* Mini 5-Step Pipeline Rail */}
+                                                    <div className="mt-4 space-y-1.5">
+                                                        <div className="flex items-center justify-between text-[11px]">
+                                                            <span className="font-semibold text-[#162c38] flex items-center gap-1">
+                                                                <span className="text-[#087f79] font-bold">
+                                                                    Step {Math.min(reached + 1, 5)}/5:
+                                                                </span>
+                                                                <span>
+                                                                    {BUILD_STEPS[Math.min(reached, 4)][lang === "bn" ? "bn" : "en"]}
+                                                                </span>
+                                                            </span>
+                                                            <span className="text-[10px] text-[#5b6f7b] font-mono font-medium">
+                                                                {reached >= 5 ? "100%" : `${Math.round((reached / 5) * 100)}%`}
+                                                            </span>
+                                                        </div>
 
-                                                {draft.build && (
-                                                    <div className="mt-4">
-                                                        <BuildProgress
-                                                            build={draft.build}
-                                                            previewUrl={
-                                                                draft.previewUrl
-                                                            }
-                                                            projectId={project.ids.find((id) => id.startsWith("cproj_"))}
-                                                            lang={lang}
-                                                        />
+                                                        <div className="grid grid-cols-5 gap-1.5">
+                                                            {BUILD_STEPS.map((step, idx) => (
+                                                                <div
+                                                                    key={step.en}
+                                                                    title={step.en}
+                                                                    className={`h-1.5 rounded-full transition-all ${
+                                                                        idx < reached
+                                                                            ? "bg-emerald-500"
+                                                                            : idx === reached
+                                                                              ? "bg-[#087f79] animate-pulse"
+                                                                              : "bg-slate-200"
+                                                                    }`}
+                                                                />
+                                                            ))}
+                                                        </div>
                                                     </div>
-                                                )}
 
-                                                <dl className="mt-5 grid gap-x-6 gap-y-3 border-t border-dudos-border pt-4 text-xs sm:grid-cols-2 lg:grid-cols-4">
-                                                    {details.map(
-                                                        ([label, value]) => (
-                                                            <div key={label}>
-                                                                <dt className="text-dudos-text-secondary">
-                                                                    {label}
-                                                                </dt>
-                                                                <dd className="mt-0.5 font-medium text-dudos-text">
-                                                                    {value}
-                                                                </dd>
-                                                            </div>
-                                                        ),
-                                                    )}
-                                                </dl>
-
-                                                {(stage !== "submitted" ||
-                                                    draft.liveUrl) && (
-                                                    <div className="mt-4 flex justify-end border-t border-dudos-border pt-4">
-                                                        {stage === "draft" ? (
-                                                            <Button
-                                                                size="sm"
-                                                                onClick={() =>
-                                                                    continueAssessment(
-                                                                        project,
-                                                                    )
-                                                                }
-                                                            >
-                                                                {lang === "bn"
-                                                                    ? "অ্যাসেসমেন্ট চালিয়ে যান"
-                                                                    : "Continue assessment"}
-                                                            </Button>
-                                                        ) : stage ===
-                                                          "payment" ? (
-                                                            <Button
-                                                                size="sm"
-                                                                onClick={() =>
-                                                                    openPayment(
-                                                                        project,
-                                                                    )
-                                                                }
-                                                            >
-                                                                <CreditCard className="mr-1 h-4 w-4" />
-                                                                {lang === "bn"
-                                                                    ? "পেমেন্ট করুন"
-                                                                    : "Pay now"}
-                                                            </Button>
-                                                        ) : stage ===
-                                                          "ready" ? (
-                                                            <Button
-                                                                size="sm"
-                                                                onClick={() =>
-                                                                    setConfirmSubmitProject(
-                                                                        project,
-                                                                    )
-                                                                }
-                                                            >
-                                                                <Rocket className="mr-1 h-4 w-4" />
-                                                                {lang === "bn"
-                                                                    ? "বিল্ডারে জমা দিন"
-                                                                    : "Submit to builder"}
-                                                            </Button>
-                                                        ) : (
+                                                    {/* Direct Live Site / Staging Preview Links */}
+                                                    <div className="mt-3 space-y-1.5">
+                                                        {draft.liveUrl && (
                                                             <a
-                                                                href={
-                                                                    draft.liveUrl
-                                                                }
+                                                                href={draft.liveUrl}
                                                                 target="_blank"
                                                                 rel="noreferrer"
-                                                                className="inline-flex items-center gap-1 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
+                                                                className="flex items-center justify-between p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold hover:bg-emerald-100 transition-colors"
                                                             >
-                                                                {lang === "bn"
-                                                                    ? "সাইট দেখুন"
-                                                                    : "Visit site"}
-                                                                <ExternalLink className="h-3 w-3" />
+                                                                <div className="flex items-center gap-1.5 truncate">
+                                                                    <Globe className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                                                                    <span className="truncate">
+                                                                        {draft.domainName || draft.liveUrl.replace(/^https?:\/\//, "")}
+                                                                    </span>
+                                                                </div>
+                                                                <ExternalLink className="h-3.5 w-3.5 shrink-0 text-emerald-700" />
+                                                            </a>
+                                                        )}
+
+                                                        {draft.previewUrl && !draft.liveUrl && (
+                                                            <a
+                                                                href={draft.previewUrl}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className="flex items-center justify-between p-2 rounded-xl bg-sky-50 border border-sky-200 text-sky-800 text-xs font-semibold hover:bg-sky-100 transition-colors"
+                                                            >
+                                                                <div className="flex items-center gap-1.5 truncate">
+                                                                    <Laptop className="h-3.5 w-3.5 text-sky-600 shrink-0" />
+                                                                    <span className="truncate">
+                                                                        {lang === "bn" ? "লাইভ স্টেজ প্রিভিউ" : "Open Staging Preview"}
+                                                                    </span>
+                                                                </div>
+                                                                <ExternalLink className="h-3.5 w-3.5 shrink-0 text-sky-700" />
                                                             </a>
                                                         )}
                                                     </div>
-                                                )}
-                                            </li>
+
+                                                    {/* Active Build Tracker (if build exists) */}
+                                                    {draft.build && stage === "submitted" && (
+                                                        <div className="mt-3">
+                                                            <BuildProgress
+                                                                build={draft.build}
+                                                                previewUrl={draft.previewUrl}
+                                                                projectId={project.ids.find((id) => id.startsWith("cproj_"))}
+                                                                lang={lang}
+                                                            />
+                                                        </div>
+                                                    )}
+
+                                                    {/* Financial Status Chip */}
+                                                    <div className="mt-3">
+                                                        {project.payment ? (
+                                                            <div className="flex items-center justify-between text-xs py-1.5 px-2.5 bg-[#f8fafb] rounded-lg border border-[#eef3f6]">
+                                                                <span className="text-[#5b6f7b] text-[11px] font-medium">
+                                                                    {lang === "bn" ? "পেমেন্ট রেকর্ড:" : "Payment:"}
+                                                                </span>
+                                                                <span className="font-semibold text-emerald-700 text-[11px] flex items-center gap-1">
+                                                                    <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                                                                    {Number(project.payment.credits || BUILD_PACKAGE_CREDITS).toLocaleString()} {unitLabel(project.payment.unit, lang)}
+                                                                </span>
+                                                            </div>
+                                                        ) : project.invoice?.status === "paid" ? (
+                                                            <div className="flex items-center justify-between text-xs py-1.5 px-2.5 bg-[#f8fafb] rounded-lg border border-[#eef3f6]">
+                                                                <span className="text-[#5b6f7b] text-[11px] font-medium">
+                                                                    {lang === "bn" ? "কোটেশন:" : "Quotation:"}
+                                                                </span>
+                                                                <span className="font-semibold text-emerald-700 text-[11px] flex items-center gap-1">
+                                                                    <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                                                                    ৳{Number(project.invoice.totalQuotationBDT || 0).toLocaleString()} {lang === "bn" ? "পরিশোধিত" : "Paid"}
+                                                                </span>
+                                                            </div>
+                                                        ) : stage === "payment" && project.invoice ? (
+                                                            <div className="flex items-center justify-between text-xs py-1.5 px-2.5 bg-amber-50/70 rounded-lg border border-amber-200">
+                                                                <span className="text-amber-800 text-[11px] font-medium">
+                                                                    {lang === "bn" ? "কোটেশন বাকি:" : "Quotation Due:"}
+                                                                </span>
+                                                                <span className="font-bold text-amber-700 text-[11px]">
+                                                                    ৳{Number(project.invoice.totalQuotationBDT || 0).toLocaleString()}
+                                                                </span>
+                                                            </div>
+                                                        ) : stage === "payment" ? (
+                                                            <div className="flex items-center justify-between text-xs py-1.5 px-2.5 bg-amber-50/70 rounded-lg border border-amber-200">
+                                                                <span className="text-amber-800 text-[11px] font-medium">
+                                                                    {lang === "bn" ? "প্যাকেজ পেমেন্ট:" : "Build Package:"}
+                                                                </span>
+                                                                <span className="font-bold text-amber-700 text-[11px]">
+                                                                    {buildPriceLabel}
+                                                                </span>
+                                                            </div>
+                                                        ) : null}
+                                                    </div>
+                                                </div>
+
+                                                {/* Bottom Action Footer */}
+                                                <div className="mt-4 pt-3 border-t border-[#f0f4f7] space-y-2.5">
+                                                    {/* Primary Stage Action Button */}
+                                                    {stage === "draft" ? (
+                                                        <Button
+                                                            size="sm"
+                                                            onClick={() => continueAssessment(project)}
+                                                            className="w-full bg-[#087f79] hover:bg-[#066762] text-white text-xs font-semibold shadow-xs flex items-center justify-center gap-1.5"
+                                                        >
+                                                            <span>
+                                                                {lang === "bn"
+                                                                    ? "অ্যাসেসমেন্ট সম্পন্ন করুন"
+                                                                    : "Continue Assessment"}
+                                                            </span>
+                                                            <ArrowRight className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                    ) : stage === "payment" ? (
+                                                        <Button
+                                                            size="sm"
+                                                            onClick={() => openPayment(project)}
+                                                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs flex items-center justify-center gap-1.5"
+                                                        >
+                                                            <CreditCard className="h-3.5 w-3.5" />
+                                                            <span>
+                                                                {lang === "bn"
+                                                                    ? "পেমেন্ট করুন"
+                                                                    : "Review & Pay"}
+                                                            </span>
+                                                        </Button>
+                                                    ) : stage === "ready" ? (
+                                                        <Button
+                                                            size="sm"
+                                                            onClick={() => setConfirmSubmitProject(project)}
+                                                            className="w-full bg-[#087f79] hover:bg-[#066762] text-white text-xs font-semibold shadow-xs flex items-center justify-center gap-1.5"
+                                                        >
+                                                            <Rocket className="h-3.5 w-3.5" />
+                                                            <span>
+                                                                {lang === "bn"
+                                                                    ? "বিল্ডারে জমা দিন"
+                                                                    : "Submit to AI Builder"}
+                                                            </span>
+                                                        </Button>
+                                                    ) : draft.liveUrl ? (
+                                                        <a
+                                                            href={draft.liveUrl}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 shadow-xs transition-colors"
+                                                        >
+                                                            <Globe className="h-3.5 w-3.5" />
+                                                            <span>
+                                                                {lang === "bn"
+                                                                    ? "সাইট দেখুন"
+                                                                    : "Visit Live Site"}
+                                                            </span>
+                                                            <ExternalLink className="h-3 w-3" />
+                                                        </a>
+                                                    ) : (
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() => {
+                                                                selectProject(project);
+                                                                router.push(lang ? `/${lang}/app/overview` : `/app/overview`);
+                                                            }}
+                                                            className="w-full border-[#dce5e9] text-xs font-semibold text-[#162c38] hover:bg-[#f8fafb] flex items-center justify-center gap-1.5"
+                                                        >
+                                                            <Eye className="h-3.5 w-3.5 text-[#087f79]" />
+                                                            <span>
+                                                                {lang === "bn"
+                                                                    ? "কমান্ড সেন্টারে দেখুন"
+                                                                    : "Open in Command Center"}
+                                                            </span>
+                                                        </Button>
+                                                    )}
+
+                                                    {/* Secondary Controls & Specs Drawer Toggle */}
+                                                    <div className="flex items-center justify-between text-[11px] text-[#5b6f7b] pt-1">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                selectProject(project);
+                                                                router.push(lang ? `/${lang}/app/overview` : `/app/overview`);
+                                                            }}
+                                                            className="hover:text-[#087f79] font-medium flex items-center gap-1 cursor-pointer"
+                                                        >
+                                                            <Layers className="h-3 w-3" />
+                                                            <span>
+                                                                {lang === "bn" ? "কমান্ড সেন্টার" : "Command Center"}
+                                                            </span>
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => toggleProjectDetails(project.id)}
+                                                            className="hover:text-[#087f79] font-medium flex items-center gap-1 cursor-pointer"
+                                                        >
+                                                            <span>
+                                                                {isExpanded
+                                                                    ? lang === "bn"
+                                                                        ? "স্পেক্স লুকান"
+                                                                        : "Hide Specs"
+                                                                    : lang === "bn"
+                                                                      ? "স্পেক্স দেখুন"
+                                                                      : "Inspect Specs"}
+                                                            </span>
+                                                            {isExpanded ? (
+                                                                <ChevronUp className="h-3 w-3" />
+                                                            ) : (
+                                                                <ChevronDown className="h-3 w-3" />
+                                                            )}
+                                                        </button>
+                                                    </div>
+
+                                                    {/* Collapsible Specs Panel */}
+                                                    {isExpanded && (
+                                                        <div className="mt-2 p-3 rounded-xl bg-[#f8fafb] border border-[#eef3f6] text-[11px] space-y-2 text-[#5b6f7b] animate-in fade-in duration-200">
+                                                            {draft.projectScope && (
+                                                                <div>
+                                                                    <span className="font-bold text-[#162c38] block mb-0.5">
+                                                                        {lang === "bn" ? "প্রজেক্টের পরিধি:" : "Project Scope:"}
+                                                                    </span>
+                                                                    <p className="line-clamp-2 text-[#5b6f7b]">
+                                                                        {draft.projectScope}
+                                                                    </p>
+                                                                </div>
+                                                            )}
+                                                            <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#eef3f6]">
+                                                                <div>
+                                                                    <span className="font-bold text-[#162c38] block">
+                                                                        {lang === "bn" ? "সময়সীমা:" : "Timeline:"}
+                                                                    </span>
+                                                                    <span>{draft.expectedTimeline || "4-8 Weeks"}</span>
+                                                                </div>
+                                                                <div>
+                                                                    <span className="font-bold text-[#162c38] block">
+                                                                        {lang === "bn" ? "বাজেট রেঞ্জ:" : "Budget Range:"}
+                                                                    </span>
+                                                                    <span>{draft.budgetExpectation || "৳150k - ৳350k"}</span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="pt-1 border-t border-[#eef3f6] flex items-center justify-between text-[10px]">
+                                                                <span className="font-mono text-slate-400">
+                                                                    ID: {project.id.slice(0, 16)}...
+                                                                </span>
+                                                                <span className="text-slate-500">
+                                                                    {lang === "bn" ? "হালনাগাদ:" : "Updated:"} {formatDate(project.updatedAt || draft.updatedAt)}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
                                         );
                                     })}
-                                </ul>
+                                </div>
+                            ) : (
+                                /* LIST / TABLE VIEW */
+                                <div className="rounded-2xl border border-[#dce5e9] bg-white overflow-hidden shadow-xs">
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left text-xs">
+                                            <thead>
+                                                <tr className="bg-[#f8fafb] border-b border-[#dce5e9] text-[11px] font-bold uppercase tracking-wider text-[#5b6f7b]">
+                                                    <th className="py-3 px-4">{lang === "bn" ? "প্রজেক্ট" : "Project"}</th>
+                                                    <th className="py-3 px-4">{lang === "bn" ? "স্টেজ" : "Stage"}</th>
+                                                    <th className="py-3 px-4">{lang === "bn" ? "পাইপলাইন" : "Pipeline"}</th>
+                                                    <th className="py-3 px-4">{lang === "bn" ? "ডিপ্লয়মেন্ট ও লিঙ্ক" : "Deployments"}</th>
+                                                    <th className="py-3 px-4">{lang === "bn" ? "পেমেন্ট" : "Financial"}</th>
+                                                    <th className="py-3 px-4">{lang === "bn" ? "হালনাগাদ" : "Updated"}</th>
+                                                    <th className="py-3 px-4 text-right">{lang === "bn" ? "অ্যাকশন" : "Action"}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-[#f0f4f7]">
+                                                {sortedProjects.map((project) => {
+                                                    const stage = projectStage(project.status);
+                                                    const reached = buildProgress(project.status);
+                                                    const draft = project.draft;
+                                                    const isLive = project.status === "live" || project.status === "completed" || Boolean(draft.liveUrl);
+
+                                                    return (
+                                                        <tr
+                                                            key={project.id}
+                                                            className="hover:bg-[#f8fafb] transition-colors"
+                                                        >
+                                                            {/* Project Info */}
+                                                            <td className="py-3.5 px-4 min-w-[200px]">
+                                                                <div
+                                                                    onClick={() => {
+                                                                        selectProject(project);
+                                                                        router.push(lang ? `/${lang}/app/overview` : `/app/overview`);
+                                                                    }}
+                                                                    className="font-bold text-[#162c38] hover:text-[#087f79] cursor-pointer truncate max-w-[220px]"
+                                                                    title={draft.title}
+                                                                >
+                                                                    {draft.title || "Untitled Application"}
+                                                                </div>
+                                                                <div className="text-[11px] text-[#5b6f7b] truncate max-w-[220px]">
+                                                                    {[
+                                                                        draft.organizationName !== draft.title ? draft.organizationName : "",
+                                                                        draft.businessDomain,
+                                                                    ]
+                                                                        .filter(Boolean)
+                                                                        .join(" · ")}
+                                                                </div>
+                                                            </td>
+
+                                                            {/* Stage Badge */}
+                                                            <td className="py-3.5 px-4 whitespace-nowrap">
+                                                                {isLive ? (
+                                                                    <Badge className="bg-emerald-50 text-emerald-800 border-emerald-300 font-semibold text-[10px] py-0.5 px-2 flex items-center gap-1 w-fit">
+                                                                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                                        <span>{lang === "bn" ? "লাইভ" : "Live"}</span>
+                                                                    </Badge>
+                                                                ) : (
+                                                                    <Badge
+                                                                        variant="outline"
+                                                                        className={`text-[10px] font-semibold py-0.5 px-2 w-fit ${STAGE_BADGE_CLASSES[stage]}`}
+                                                                    >
+                                                                        {stageLabel(project.status, lang)}
+                                                                    </Badge>
+                                                                )}
+                                                            </td>
+
+                                                            {/* Pipeline Progress */}
+                                                            <td className="py-3.5 px-4 min-w-[130px]">
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <div className="flex-1 grid grid-cols-5 gap-1">
+                                                                        {BUILD_STEPS.map((_, idx) => (
+                                                                            <div
+                                                                                key={idx}
+                                                                                className={`h-1.5 rounded-full ${
+                                                                                    idx < reached
+                                                                                        ? "bg-emerald-500"
+                                                                                        : idx === reached
+                                                                                          ? "bg-[#087f79]"
+                                                                                          : "bg-slate-200"
+                                                                                }`}
+                                                                            />
+                                                                        ))}
+                                                                    </div>
+                                                                    <span className="text-[10px] font-mono font-medium text-[#5b6f7b]">
+                                                                        {reached}/5
+                                                                    </span>
+                                                                </div>
+                                                                <div className="text-[10px] text-[#5b6f7b] mt-0.5 truncate">
+                                                                    {BUILD_STEPS[Math.min(reached, 4)][lang === "bn" ? "bn" : "en"]}
+                                                                </div>
+                                                            </td>
+
+                                                            {/* Deployment & Links */}
+                                                            <td className="py-3.5 px-4 whitespace-nowrap">
+                                                                <div className="flex items-center gap-2">
+                                                                    {draft.liveUrl ? (
+                                                                        <a
+                                                                            href={draft.liveUrl}
+                                                                            target="_blank"
+                                                                            rel="noreferrer"
+                                                                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md"
+                                                                        >
+                                                                            <Globe className="h-3 w-3" />
+                                                                            <span>{draft.domainName || "Live"}</span>
+                                                                            <ExternalLink className="h-2.5 w-2.5" />
+                                                                        </a>
+                                                                    ) : draft.previewUrl ? (
+                                                                        <a
+                                                                            href={draft.previewUrl}
+                                                                            target="_blank"
+                                                                            rel="noreferrer"
+                                                                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-sky-700 hover:text-sky-800 bg-sky-50 border border-sky-200 px-2 py-0.5 rounded-md"
+                                                                        >
+                                                                            <Laptop className="h-3 w-3" />
+                                                                            <span>Preview</span>
+                                                                            <ExternalLink className="h-2.5 w-2.5" />
+                                                                        </a>
+                                                                    ) : (
+                                                                        <span className="text-slate-400 text-[11px]">
+                                                                            {lang === "bn" ? "পরে তৈরি হবে" : "In Queue"}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+
+                                                            {/* Financial / Payment */}
+                                                            <td className="py-3.5 px-4 whitespace-nowrap text-[11px]">
+                                                                {project.payment ? (
+                                                                    <span className="font-semibold text-emerald-700 flex items-center gap-1">
+                                                                        <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                                                                        {Number(project.payment.credits || BUILD_PACKAGE_CREDITS).toLocaleString()} {unitLabel(project.payment.unit, lang)}
+                                                                    </span>
+                                                                ) : project.invoice?.status === "paid" ? (
+                                                                    <span className="font-semibold text-emerald-700 flex items-center gap-1">
+                                                                        <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                                                                        ৳{Number(project.invoice.totalQuotationBDT || 0).toLocaleString()}
+                                                                    </span>
+                                                                ) : stage === "payment" ? (
+                                                                    <span className="font-semibold text-amber-700">
+                                                                        {lang === "bn" ? "পেমেন্ট বাকি" : "Payment Due"}
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-slate-400">
+                                                                        {lang === "bn" ? "খসড়া" : "Draft"}
+                                                                    </span>
+                                                                )}
+                                                            </td>
+
+                                                            {/* Updated Date */}
+                                                            <td className="py-3.5 px-4 whitespace-nowrap text-[11px] text-[#5b6f7b] font-mono">
+                                                                {formatDate(project.updatedAt || draft.updatedAt)}
+                                                            </td>
+
+                                                            {/* Action Button */}
+                                                            <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                                                                {stage === "draft" ? (
+                                                                    <Button
+                                                                        size="sm"
+                                                                        onClick={() => continueAssessment(project)}
+                                                                        className="bg-[#087f79] hover:bg-[#066762] text-white text-[11px] h-7 px-2.5 shadow-xs font-semibold"
+                                                                    >
+                                                                        {lang === "bn" ? "অ্যাসেসমেন্ট" : "Continue"}
+                                                                    </Button>
+                                                                ) : stage === "payment" ? (
+                                                                    <Button
+                                                                        size="sm"
+                                                                        onClick={() => openPayment(project)}
+                                                                        className="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] h-7 px-2.5 shadow-xs font-semibold"
+                                                                    >
+                                                                        {lang === "bn" ? "পেমেন্ট" : "Pay Now"}
+                                                                    </Button>
+                                                                ) : stage === "ready" ? (
+                                                                    <Button
+                                                                        size="sm"
+                                                                        onClick={() => setConfirmSubmitProject(project)}
+                                                                        className="bg-[#087f79] hover:bg-[#066762] text-white text-[11px] h-7 px-2.5 shadow-xs font-semibold"
+                                                                    >
+                                                                        {lang === "bn" ? "জমা দিন" : "Submit"}
+                                                                    </Button>
+                                                                ) : draft.liveUrl ? (
+                                                                    <a
+                                                                        href={draft.liveUrl}
+                                                                        target="_blank"
+                                                                        rel="noreferrer"
+                                                                        className="inline-flex items-center gap-1 rounded-md bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-emerald-700 shadow-xs"
+                                                                    >
+                                                                        <span>{lang === "bn" ? "সাইট" : "Visit"}</span>
+                                                                        <ExternalLink className="h-2.5 w-2.5" />
+                                                                    </a>
+                                                                ) : (
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="outline"
+                                                                        onClick={() => {
+                                                                            selectProject(project);
+                                                                            router.push(lang ? `/${lang}/app/overview` : `/app/overview`);
+                                                                        }}
+                                                                        className="border-[#dce5e9] text-[11px] h-7 px-2.5 font-semibold text-[#162c38] hover:bg-[#f8fafb]"
+                                                                    >
+                                                                        {lang === "bn" ? "ওভারভিউ" : "Overview"}
+                                                                    </Button>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             )}
                         </>
                     )}
