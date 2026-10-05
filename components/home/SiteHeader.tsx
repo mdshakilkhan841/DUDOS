@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "@/components/dudos-link";
-import { ArrowUpRight, Globe2, Menu } from "lucide-react";
+import { Globe2, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -115,13 +115,6 @@ export function SiteHeader({
           <Link className="desktop-login" href={workspaceHref}>
             {workspaceLabel}
           </Link>
-          <Button asChild className="header-cta">
-            <Link href={`/${lang}/builder`}>
-              {t("nav.websiteBuilder", lang)}
-              <ArrowUpRight size={16} />
-            </Link>
-          </Button>
-
           <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
             <SheetTrigger asChild>
               <Button
