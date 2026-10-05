@@ -75,6 +75,18 @@ export async function downloadFile(file: Pick<ClientFile, "id" | "name">, admin 
     URL.revokeObjectURL(url);
 }
 
+export type AppCredentials = { appUrl: string | null; username: string; password: string };
+
+/** The generated app's admin login. Fetched on demand; never cache or persist it. */
+export async function getAppCredentials(projectId: string): Promise<AppCredentials> {
+    return read(
+        await fetch(`${API_BASE}/projects/${encodeURIComponent(projectId)}/app-credentials`, {
+            headers: authHeaders(),
+            cache: "no-store",
+        }),
+    );
+}
+
 /** The generated app's source code (.zip), available to its owner once the build is ready. */
 export async function downloadProjectSource(projectId: string): Promise<void> {
     const res = await fetch(`${API_BASE}/projects/${encodeURIComponent(projectId)}/source.zip`, {

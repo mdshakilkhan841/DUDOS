@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Check, Download, ExternalLink, Loader2, Wrench } from "lucide-react";
 import { downloadProjectSource } from "@/lib/dudos/files";
+import { AppLoginDetails } from "./AppLoginDetails";
 
 /** The builder's progress as the backend summarises it for clients. */
 export type ClientBuild = {
@@ -116,6 +117,7 @@ export function BuildProgress({
                 )}
             </div>
             {downloadError && <p className="mt-2 text-xs text-red-600">{downloadError}</p>}
+            {build.ready && projectId && <AppLoginDetails projectId={projectId} lang={lang} />}
             <ol className="mt-2.5 grid grid-cols-5 gap-1">
                 {build.phases.map((phase, index) => {
                     const done = index < current || (build.ready && index === current);
