@@ -75,6 +75,22 @@ export async function downloadFile(file: Pick<ClientFile, "id" | "name">, admin 
     URL.revokeObjectURL(url);
 }
 
+/** The generated app's source code (.zip), available to its owner once the build is ready. */
+export async function downloadProjectSource(projectId: string): Promise<void> {
+    const res = await fetch(`${API_BASE}/projects/${encodeURIComponent(projectId)}/source.zip`, {
+        headers: authHeaders(),
+    });
+    if (!res.ok) await read(res);
+    const disposition = res.headers.get("content-disposition") || "";
+    const name = /filename="([^"]+)"/.exec(disposition)?.[1] || "source-code.zip";
+    const url = URL.createObjectURL(await res.blob());
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = name;
+    link.click();
+    URL.revokeObjectURL(url);
+}
+
 export async function listProjectFiles(projectId: string): Promise<{ files: ClientFile[]; totalBytes: number }> {
     return read(
         await fetch(`${API_BASE}/admin/projects/${encodeURIComponent(projectId)}/files`, {

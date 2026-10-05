@@ -2491,6 +2491,7 @@ ${draft.projectScope}
                                         previewUrl={
                                             selectedProject.draft.previewUrl
                                         }
+                                        projectId={selectedProject.ids.find((id) => id.startsWith("cproj_"))}
                                         lang={lang}
                                     />
 
@@ -4051,6 +4052,7 @@ ${draft.projectScope}
                                                             previewUrl={
                                                                 draft.previewUrl
                                                             }
+                                                            projectId={project.ids.find((id) => id.startsWith("cproj_"))}
                                                             lang={lang}
                                                         />
                                                     </div>

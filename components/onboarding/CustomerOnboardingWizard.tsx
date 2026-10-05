@@ -24,6 +24,7 @@ import {
 import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Notice } from "@/components/ui/notice";
@@ -641,9 +642,8 @@ export function CustomerOnboardingWizard({ lang = "en" }: { lang?: string }) {
                   <Label htmlFor="regPass" required>Password</Label>
                   <div className="relative mt-1">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
+                    <PasswordInput
                       id="regPass"
-                      type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Min 8 chars"
@@ -657,9 +657,8 @@ export function CustomerOnboardingWizard({ lang = "en" }: { lang?: string }) {
                   <Label htmlFor="regConfirm" required>Confirm Password</Label>
                   <div className="relative mt-1">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
+                    <PasswordInput
                       id="regConfirm"
-                      type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Repeat password"

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { ArrowUpRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Notice } from "@/components/dudos-ui";
 import { useAuth } from "@/context/auth-context";
@@ -41,6 +42,7 @@ export function LoginClient({
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -55,6 +57,10 @@ export function LoginClient({
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (mode === "signup" && password !== confirmPassword) {
+      setError("The passwords do not match.");
+      return;
+    }
     setBusy(true);
     setError("");
     try {
@@ -214,9 +220,8 @@ export function LoginClient({
             </div>
             <div className="space-y-2">
               <Label htmlFor="password" className="text-[#162c38]">Password</Label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -225,7 +230,29 @@ export function LoginClient({
                 autoComplete={mode === "signin" ? "current-password" : "new-password"}
                 className="bg-white border-[#dce5e9] text-[#162c38] focus-visible:border-[#087f79] focus-visible:ring-[#087f79]/20"
               />
+              {mode === "signup" && (
+                <p className="text-xs text-[#5b6f7b]">At least 8 characters.</p>
+              )}
             </div>
+            {mode === "signup" && (
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password" className="text-[#162c38]">Confirm password</Label>
+                <PasswordInput
+                  id="confirm-password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  minLength={8}
+                  maxLength={200}
+                  autoComplete="new-password"
+                  aria-invalid={confirmPassword.length > 0 && confirmPassword !== password}
+                  className="bg-white border-[#dce5e9] text-[#162c38] focus-visible:border-[#087f79] focus-visible:ring-[#087f79]/20"
+                />
+                {confirmPassword.length > 0 && confirmPassword !== password && (
+                  <p className="text-xs text-red-600">The passwords do not match.</p>
+                )}
+              </div>
+            )}
             {error && <Notice tone="error">{error}</Notice>}
             <Button
               disabled={busy}

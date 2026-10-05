@@ -1,6 +1,8 @@
 "use client";
 
-import { Check, ExternalLink, Loader2, Wrench } from "lucide-react";
+import { useState } from "react";
+import { Check, Download, ExternalLink, Loader2, Wrench } from "lucide-react";
+import { downloadProjectSource } from "@/lib/dudos/files";
 
 /** The builder's progress as the backend summarises it for clients. */
 export type ClientBuild = {
@@ -28,14 +30,32 @@ const BN_LABELS: Record<string, string> = {
 export function BuildProgress({
     build,
     previewUrl,
+    projectId,
     lang,
 }: {
     build?: ClientBuild | null;
     previewUrl?: string | null;
+    /** When given and the build is ready, the client can download the source code. */
+    projectId?: string | null;
     lang: string;
 }) {
+    const [downloading, setDownloading] = useState(false);
+    const [downloadError, setDownloadError] = useState("");
     if (!build) return null;
     const bn = lang === "bn";
+
+    async function downloadSource() {
+        if (!projectId) return;
+        setDownloading(true);
+        setDownloadError("");
+        try {
+            await downloadProjectSource(projectId);
+        } catch (e) {
+            setDownloadError((e as Error).message);
+        } finally {
+            setDownloading(false);
+        }
+    }
 
     if (build.phase === "attention") {
         return (
@@ -62,20 +82,40 @@ export function BuildProgress({
                     )}
                     {bn ? "বিল্ডের অগ্রগতি" : "Build progress"}: {bn ? BN_LABELS[build.phase] || build.label : build.label}
                 </p>
-                {build.ready && previewUrl ? (
-                    <a
-                        href={previewUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 font-semibold text-dudos-primary hover:underline"
-                    >
-                        {bn ? "প্রিভিউ দেখুন" : "Open preview"}
-                        <ExternalLink className="h-3 w-3" />
-                    </a>
+                {build.ready ? (
+                    <span className="flex flex-wrap items-center gap-3">
+                        {previewUrl && (
+                            <a
+                                href={previewUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 font-semibold text-dudos-primary hover:underline"
+                            >
+                                {bn ? "প্রিভিউ দেখুন" : "Open preview"}
+                                <ExternalLink className="h-3 w-3" />
+                            </a>
+                        )}
+                        {projectId && (
+                            <button
+                                type="button"
+                                onClick={() => void downloadSource()}
+                                disabled={downloading}
+                                className="inline-flex items-center gap-1 font-semibold text-dudos-primary hover:underline disabled:opacity-60"
+                            >
+                                {downloading ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                    <Download className="h-3 w-3" />
+                                )}
+                                {bn ? "কোড ডাউনলোড (.zip)" : "Download code (.zip)"}
+                            </button>
+                        )}
+                    </span>
                 ) : (
                     <span className="text-dudos-text-secondary">{build.progress || 0}%</span>
                 )}
             </div>
+            {downloadError && <p className="mt-2 text-xs text-red-600">{downloadError}</p>}
             <ol className="mt-2.5 grid grid-cols-5 gap-1">
                 {build.phases.map((phase, index) => {
                     const done = index < current || (build.ready && index === current);
